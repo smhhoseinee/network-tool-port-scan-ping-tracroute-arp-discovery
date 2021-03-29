@@ -44,6 +44,7 @@ void *serve_client(void* client_socket_void){
 	}
 	while(bytes_rcv > 0){
 		ssize_t bytes_send = send(client_socket,buffer,bytes_rcv,0);
+		puts(buffer);
 
 		if(bytes_send<0){
 			perror("send failure");

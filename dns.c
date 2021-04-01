@@ -45,7 +45,7 @@ int main()
 	hints.ai_family = AF_UNSPEC; 
 	hints.ai_socktype = SOCK_STREAM;
 
-	if ( (rv = getaddrinfo( hostname , "domain" , &hints , &results)) != 0) 
+	if ( (rv = getaddrinfo( hostname , "domain" , &hints ,  &results)) != 0) 
 	{
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
@@ -56,7 +56,6 @@ int main()
 	{
 		//pass data into sockaddr_in struct
 		ip_access = (struct sockaddr_in *) p->ai_addr;
-
 		printf("IP address is %s: \n",inet_ntoa( ip_access->sin_addr ) );	
 
 	}

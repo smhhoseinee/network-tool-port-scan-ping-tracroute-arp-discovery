@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
 
 void main(){
   int x=7;

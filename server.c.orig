@@ -43,11 +43,6 @@ void *serve_client(void* client_socket_void){
 		exit(EXIT_FAILURE);
 	}
 	while(bytes_rcv > 0){
-
-//		char* server_msg = malloc(sizeof(char) * MAX_MSG_OUT_LEN);
-		puts("msg to client:\n");
-		fgets(buffer,MAX_MSG_OUT_LEN,stdin);
-
 		ssize_t bytes_send = send(client_socket,buffer,bytes_rcv,0);
 		puts(buffer);
 
@@ -59,7 +54,7 @@ void *serve_client(void* client_socket_void){
 			exit(EXIT_FAILURE);
 		}
 
-		bytes_rcv = recv(client_socket,buffer,MAX_MSG_OUT_LEN,0);
+		bytes_rcv =  bytes_rcv = recv(client_socket,buffer,MAX_MSG_OUT_LEN,0);
 		if(bytes_rcv<0){
 			perror("recv failed");
 			exit(EXIT_FAILURE);

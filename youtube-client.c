@@ -31,11 +31,15 @@ int main(){
 		return -1;
 	}
 
-	char buffer[256] = {0};
-	int recv_status = recv(sock,&buffer,sizeof(buffer),0);
 
-	printf("%d\n",recv_status);
-	printf("server : %s\n",buffer);
+
+	char buffer[256] = {0};
+	for(;;){
+		int recv_status = recv(sock,&buffer,sizeof(buffer),0);
+		printf("server : %s\n",buffer);
+
+	}
+
 	
 	close(sock);
 	return 0;

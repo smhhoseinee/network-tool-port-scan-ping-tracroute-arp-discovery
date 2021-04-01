@@ -1,3 +1,4 @@
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -152,7 +153,7 @@ int main(){
 			total_rcv_bytes += bytes;
 			buffer[bytes] = '\0';
 
-			printf("buffer=%s",buffer);
+			printf("%s",buffer);
 		}
 		puts("");
 

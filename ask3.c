@@ -9,9 +9,11 @@
 
 
 /*
- *
- * ask user 3 for options 
- *
+ * ask host or ip
+ * input host or ip
+ * convert host to ip
+ * ask user 3 options 
+ * 
  *
  *
  * */
@@ -29,42 +31,159 @@ void remove_cr(char *str){
 	}
 }
 
-int input_port(char *port_str){
+in_port_t input_port(char *port_str){
 	puts("SERVER PORT: [unit 16] ");
 	fgets(port_str,MAX_PORT_STR_LEN,stdin);
 	remove_cr(port_str);
+
+	in_port_t server_port = atoi(port_str);
+
+	return server_port;
+}
+
+int input_ip(char *server_addr_str ){
+	puts("SERVER IP: [x.x.x.x (ipv4)] ");
+	fgets(server_addr_str,MAX_IP_STR_LEN,stdin);
+	remove_cr(server_addr_str);
 	return 0;
 }
 
-int ask_what_to_do(char *port_str){
+int create_socket(){
+	//socket() creation
+	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP  );
+	if(sock < 0){
+		perror("socket() failed");
+		exit(EXIT_FAILURE);
+	}
+
+	return sock;
+}
+
+int connect_socket(int sock ,struct  sockaddr_in server_address){
+        if(connect(sock, (const struct sockaddr *)&server_address, sizeof(server_address))<0){
+                perror("connection failed!");
+                exit(EXIT_FAILURE);
+        }else{
+		printf("port %d is open", ntohs(server_address.sin_port));
+	}
+	return 0;
+}
+
+
+struct sockaddr_in create_struct_sockaddr(struct sockaddr_in server_address, char *server_addr_str, in_port_t server_port){
+	//create struct sockaddr
+	memset(&server_address,0,sizeof(server_address));
+	server_address.sin_family = AF_INET;
+        int numerical_address = inet_pton(AF_INET,server_addr_str, &server_address.sin_addr.s_addr);
+
+	if(numerical_address == 0){
+                fputs("invalid IP", stderr);
+                exit(EXIT_FAILURE);
+        }
+        if(numerical_address < 0){
+                fputs("p to n failed",stderr);
+                exit(EXIT_FAILURE);
+        }
+        server_address.sin_port = htons(server_port);
+
+	return server_address;
+
+
+}
+
+int input_port_range(){
+
+
+}
+
+int scan_single_port(char *server_addr_str,char *port_str){
+
+	in_port_t server_port = input_port(port_str);
+	struct sockaddr_in server_address;
+	server_address = create_struct_sockaddr(server_address,server_addr_str,server_port);
+
+	int sock = create_socket();
+	connect_socket(sock,server_address);
+
+	return 0;
+}
+
+const int NUMBER_OF_SERVICES = 10;
+int ask_port_service(char *server_addr_str,char *port_str){
+	int choice;
+	int port_of_service[NUMBER_OF_SERVICES];
+
+	int i = 1;
+	port_of_service[i]=80;
+	i++;
+	port_of_service[i]=443;
+	i++;
+	port_of_service[i]=25;
+	i++;
+	port_of_service[i]=21;
+	i++;
+	port_of_service[i]=23;
+	i++;
+	port_of_service[i]=22;
+	i++;
+	
+
+	puts("select service you want to scan:\n");
+	puts("1-HTTP(80)\n");
+	puts("2-TLS(443)\n");
+	puts("3-SMTP(25)\n");
+	puts("4-FTP(21)\n");
+	puts("5-TELNET(23)\n");
+	puts("6-SSH(22)\n");
+	
+
+	choice = getchar();
+	getc(stdin);
+	choice -= '0';
+
+	printf("you chose service %d \n",choice);
+
+	scan_single_port(server_addr_str,port_str);
+
+
+
+}
+
+int ask_what_to_do(char *server_addr_str, char *port_str){
 
 	int choice;
 	puts("select what you want:\n");
 	puts("1-scan all ports\n");
 	puts("2-just for common ports\n");
 	puts("3-request for specific port \n");
-
+	puts("4-request for specific services\n");
+	puts("4-request for specific range\n");
 
 	choice = getchar();
 	getc(stdin);
 
 	choice -= '0';
 
-
+	printf("you chose %d \n",choice);
 	switch(choice)
 	{
 		case 1:
-			printf("you chose 1\n");
 			break;
 
 		case 2:
-			printf("you chose 2\n");
 			break;
 
 		case 3:
-			printf("you chose 3\n");
-			input_port(port_str);
+
+			scan_single_port(server_addr_str,port_str);
 			break;
+		case 4:
+
+			break;
+		case 5:
+
+			break;
+
 
 			// operator doesn't match any case constant +, -, *, /
 		default:
@@ -74,14 +193,7 @@ int ask_what_to_do(char *port_str){
 }
 
 
-int input_ip(char *server_addr_str ){
-	puts("SERVER IP: [x.x.x.x (ipv4)] ");
-	fgets(server_addr_str,MAX_IP_STR_LEN,stdin);
-	remove_cr(server_addr_str);
-	return 0;
-}
-
-int ask_ip_or_host(char *server_addr_str){
+int ask_ip_or_host(char *server_addr_str, char *port_str){
 
 	 int choice;
          puts("choose your input method:\n");
@@ -114,6 +226,7 @@ int ask_ip_or_host(char *server_addr_str){
 			printf("Error! operator is not correct");
 	}
 
+	ask_what_to_do(server_addr_str, port_str);
 
        	return 0;
 }
@@ -137,50 +250,18 @@ int main(){
         memset(port_str, '\0', MAX_PORT_STR_LEN);
 
 //	ask_ip_or_host(server_addr_str,port_str);
-	ask_ip_or_host(server_addr_str);
+	ask_ip_or_host(server_addr_str, port_str);
 
-	ask_what_to_do(port_str);
-
-	puts(server_addr_str);
-        puts(port_str);
 
 	//convert port to useful format
-	in_port_t server_port = atoi(port_str);
+  //	in_port_t server_port = atoi(port_str);
 
 
 
 
-	//create struct sockaddr
-	struct sockaddr_in server_address;
-	memset(&server_address,0,sizeof(server_address));
-	server_address.sin_family = AF_INET;
-        int numerical_address = inet_pton(AF_INET,server_addr_str, &server_address.sin_addr.s_addr);
+	//struct sockaddr_in server_address;
+	//server_address = create_struct_sockaddr(server_address,server_addr_str);
 
-	if(numerical_address == 0){
-                fputs("invalid IP", stderr);
-                exit(EXIT_FAILURE);
-        }
-        if(numerical_address < 0){
-                fputs("p to n failed",stderr);
-                exit(EXIT_FAILURE);
-        }
-        server_address.sin_port = htons(server_port);
-
-
-
-
-	//socket() creation
-	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP  );
-	if(sock < 0){
-		perror("socket() failed");
-		exit(EXIT_FAILURE);
-	}
-        if(connect(sock, (const struct sockaddr *)&server_address, sizeof(server_address))<0){
-                perror("connection failed!");
-                exit(EXIT_FAILURE);
-        }else{
-		printf("port %s is open",port_str);
-	}
 
 	return 0; 
 }

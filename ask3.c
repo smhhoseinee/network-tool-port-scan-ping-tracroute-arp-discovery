@@ -94,37 +94,46 @@ struct sockaddr_in create_struct_sockaddr(struct sockaddr_in server_address, cha
 int input_port_range(){
 
 
+	return 0;
 }
 
-int scan_single_port(char *server_addr_str,char *port_str){
-
-	in_port_t server_port = input_port(port_str);
+int scan_port(char *server_addr_str,in_port_t server_port){
 	struct sockaddr_in server_address;
 	server_address = create_struct_sockaddr(server_address,server_addr_str,server_port);
 
 	int sock = create_socket();
 	connect_socket(sock,server_address);
 
+
+	return 0;
+}
+
+int input_and_scan_port(char *server_addr_str,char *port_str){
+	in_port_t server_port = input_port(port_str);
+	scan_port(server_addr_str,server_port);
 	return 0;
 }
 
 const int NUMBER_OF_SERVICES = 10;
 int ask_port_service(char *server_addr_str,char *port_str){
 	int choice;
-	int port_of_service[NUMBER_OF_SERVICES];
+	char*  port_of_service[NUMBER_OF_SERVICES];
+	for(int i=0;i<NUMBER_OF_SERVICES;i++){
+		port_of_service[i] = malloc(sizeof(char) * MAX_PORT_STR_LEN);
+	}
 
 	int i = 1;
-	port_of_service[i]=80;
+	port_of_service[i]="80";
 	i++;
-	port_of_service[i]=443;
+	port_of_service[i]="443";
 	i++;
-	port_of_service[i]=25;
+	port_of_service[i]="25";
 	i++;
-	port_of_service[i]=21;
+	port_of_service[i]="21";
 	i++;
-	port_of_service[i]=23;
+	port_of_service[i]="23";
 	i++;
-	port_of_service[i]=22;
+	port_of_service[i]="22";
 	i++;
 	
 
@@ -141,10 +150,14 @@ int ask_port_service(char *server_addr_str,char *port_str){
 	getc(stdin);
 	choice -= '0';
 
+
 	printf("you chose service %d \n",choice);
 
-	scan_single_port(server_addr_str,port_str);
+	port_str = port_of_service[choice];
+	in_port_t server_port = atoi(port_str);
+	scan_port(server_addr_str,server_port);
 
+	return 0;
 
 
 }
@@ -175,10 +188,10 @@ int ask_what_to_do(char *server_addr_str, char *port_str){
 
 		case 3:
 
-			scan_single_port(server_addr_str,port_str);
+			input_and_scan_port(server_addr_str,port_str);
 			break;
 		case 4:
-
+			ask_port_service(server_addr_str,port_str);
 			break;
 		case 5:
 

@@ -6,7 +6,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-
+#include <errno.h>
+#include <netdb.h>
 
 /*
  * ask host or ip
@@ -21,6 +22,9 @@
 const int MAX_IP_STR_LEN = 17;
 const int MAX_PORT_STR_LEN = 7;
 const int MAX_MSG_OUT_LEN = 128;
+const int MAX_HOSTNAME_LEN=100;
+
+int ask_what_to_do(char *server_addr_str, char *port_str);
 
 void remove_cr(char *str){
 	for(int i=0;i<strlen(str); i++){
@@ -41,11 +45,47 @@ in_port_t input_port(char *port_str){
 	return server_port;
 }
 
-int input_domain(char *server_addr_str ){
+struct addrinfo * input_host(char *server_addr_str,char *port_str ){
+
+	struct addrinfo hints, *results, *p;
+	struct sockaddr_in *ip_access;
+	char *hostname = malloc(sizeof(char)*MAX_HOSTNAME_LEN);
+	int addinfo_status;
+
+	printf("Enter a Domain Name: \n");
+	fgets(hostname,MAX_HOSTNAME_LEN,stdin);
+	remove_cr(hostname);
+
+	puts(hostname);
+	// zero out structure
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if ((addinfo_status = getaddrinfo( hostname , "domain" , &hints ,  &results)) != 0)
+	{
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(addinfo_status));
+		return NULL;
+	}
+
+	//loops through structure using ai_next
+	for(p = results; p != NULL; p = p->ai_next)
+	{
+		//pass data into sockaddr_in struct
+		ip_access = (struct sockaddr_in *) p->ai_addr;
+		printf("IP address is %s: \n",inet_ntoa( ip_access->sin_addr ) );
+		server_addr_str = inet_ntoa(ip_access->sin_addr );
+		ask_what_to_do(server_addr_str, port_str);
+
+	}
+
+	freeaddrinfo(results);
 
 
+	printf("\n");
 
-	return 0;
+
+	return results;
 }
 
 int input_ip(char *server_addr_str ){
@@ -234,20 +274,20 @@ int ask_ip_or_host(char *server_addr_str, char *port_str){
 		case 1:
 			printf("you chose ip\n");
 			input_ip(server_addr_str );
-			printf("2you chose ip\n");
+			ask_what_to_do(server_addr_str, port_str);
 			break;
+
 
 		case 2:
 			printf("you chose hostname\n");
+			input_host(server_addr_str,port_str);
 			//input host function
 			break;
-
 			// operator doesn't match any case constant +, -, *, /
 		default:
 			printf("Error! operator is not correct");
 	}
 
-	ask_what_to_do(server_addr_str, port_str);
 
        	return 0;
 }

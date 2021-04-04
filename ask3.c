@@ -24,6 +24,9 @@ const int MAX_PORT_STR_LEN = 7;
 const int MAX_MSG_OUT_LEN = 128;
 const int MAX_HOSTNAME_LEN=100;
 const int NUMBER_OF_SERVICES = 10;
+const int MIN_PORT_NUMBER= 1;
+const int MAX_WELLKNOWN_PORT_NUMBER= 1023;
+const int MAX_PORT_NUMBER= 65353;
 
 int ask_what_to_do(char *server_addr_str, char *port_str);
 
@@ -140,11 +143,11 @@ struct sockaddr_in create_struct_sockaddr(struct sockaddr_in server_address, cha
 
 }
 
-int scan_port(char *server_addr_str,in_port_t server_port){
+int scan_port(char *server_addr_str,in_port_t server_port,int sock){
 	struct sockaddr_in server_address;
 	server_address = create_struct_sockaddr(server_address,server_addr_str,server_port);
 
-	int sock = create_socket();
+//	int sock = create_socket();
 	connect_socket(sock,server_address);
 
 
@@ -154,8 +157,10 @@ int scan_port(char *server_addr_str,in_port_t server_port){
 
 int scan_port_range(char *server_addr_str,in_port_t server_port_start, in_port_t server_port_end){
 
+	
+	int sock = create_socket();
 	for(int i = server_port_start; i <= server_port_end; i++){
-		scan_port(server_addr_str , i);
+		scan_port(server_addr_str , i, sock);
 	}
 
 	return 0;
@@ -176,7 +181,6 @@ int input_port_range(char *server_addr_str){
 	remove_cr(port_str);
 	server_port_end = atoi(port_str);
 
-
 	scan_port_range(server_addr_str,server_port_start,server_port_end);
 
 	return 0;
@@ -185,7 +189,9 @@ int input_port_range(char *server_addr_str){
 
 int input_and_scan_port(char *server_addr_str,char *port_str){
 	in_port_t server_port = input_port(port_str);
-	scan_port(server_addr_str,server_port);
+
+	int sock = create_socket();
+	scan_port(server_addr_str,server_port, sock);
 	return 0;
 }
 
@@ -229,7 +235,9 @@ int ask_port_service(char *server_addr_str,char *port_str){
 
 	port_str = port_of_service[choice];
 	in_port_t server_port = atoi(port_str);
-	scan_port(server_addr_str,server_port);
+
+	int sock = create_socket();
+	scan_port(server_addr_str,server_port,sock);
 
 	return 0;
 
@@ -241,7 +249,7 @@ int ask_what_to_do(char *server_addr_str, char *port_str){
 	int choice;
 	puts("select what you want:\n");
 	puts("1-scan all ports\n");
-	puts("2-just for common ports\n");
+	puts("2-just for well-known ports(0-1023)\n");
 	puts("3-request for specific port \n");
 	puts("4-request for specific services\n");
 	puts("5-request for specific range\n");
@@ -252,12 +260,15 @@ int ask_what_to_do(char *server_addr_str, char *port_str){
 	choice -= '0';
 
 	printf("you chose %d \n",choice);
+
 	switch(choice)
 	{
 		case 1:
+			scan_port_range(server_addr_str,MIN_PORT_NUMBER,MAX_PORT_NUMBER);
 			break;
 
 		case 2:
+			scan_port_range(server_addr_str,MIN_PORT_NUMBER,MAX_WELLKNOWN_PORT_NUMBER);
 			break;
 
 		case 3:

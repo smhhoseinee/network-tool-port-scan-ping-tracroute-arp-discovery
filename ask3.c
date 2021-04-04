@@ -23,6 +23,7 @@ const int MAX_IP_STR_LEN = 17;
 const int MAX_PORT_STR_LEN = 7;
 const int MAX_MSG_OUT_LEN = 128;
 const int MAX_HOSTNAME_LEN=100;
+const int NUMBER_OF_SERVICES = 10;
 
 int ask_what_to_do(char *server_addr_str, char *port_str);
 
@@ -109,7 +110,7 @@ int create_socket(){
 int connect_socket(int sock ,struct  sockaddr_in server_address){
         if(connect(sock, (const struct sockaddr *)&server_address, sizeof(server_address))<0){
 		printf("port %d is not open\n", ntohs(server_address.sin_port));
-                perror("connection failed!");
+             //   perror("connection failed!");
              //   exit(EXIT_FAILURE);
         }else{
 		printf("port %d is open\n", ntohs(server_address.sin_port));
@@ -139,12 +140,6 @@ struct sockaddr_in create_struct_sockaddr(struct sockaddr_in server_address, cha
 
 }
 
-int input_port_range(){
-
-
-	return 0;
-}
-
 int scan_port(char *server_addr_str,in_port_t server_port){
 	struct sockaddr_in server_address;
 	server_address = create_struct_sockaddr(server_address,server_addr_str,server_port);
@@ -156,13 +151,44 @@ int scan_port(char *server_addr_str,in_port_t server_port){
 	return 0;
 }
 
+
+int scan_port_range(char *server_addr_str,in_port_t server_port_start, in_port_t server_port_end){
+
+	for(int i = server_port_start; i <= server_port_end; i++){
+		scan_port(server_addr_str , i);
+	}
+
+	return 0;
+}
+
+int input_port_range(char *server_addr_str){
+	in_port_t server_port_start;
+	in_port_t server_port_end;
+	char *port_str = malloc(sizeof(char) * MAX_PORT_STR_LEN);
+
+	puts("FROM PORT: [unit 16] ");
+	fgets(port_str,MAX_PORT_STR_LEN,stdin);
+	remove_cr(port_str);
+	server_port_start = atoi(port_str);
+
+	puts("TO PORT: [unit 16] ");
+	fgets(port_str,MAX_PORT_STR_LEN,stdin);
+	remove_cr(port_str);
+	server_port_end = atoi(port_str);
+
+
+	scan_port_range(server_addr_str,server_port_start,server_port_end);
+
+	return 0;
+}
+
+
 int input_and_scan_port(char *server_addr_str,char *port_str){
 	in_port_t server_port = input_port(port_str);
 	scan_port(server_addr_str,server_port);
 	return 0;
 }
 
-const int NUMBER_OF_SERVICES = 10;
 int ask_port_service(char *server_addr_str,char *port_str){
 	int choice;
 	char*  port_of_service[NUMBER_OF_SERVICES];
@@ -218,7 +244,7 @@ int ask_what_to_do(char *server_addr_str, char *port_str){
 	puts("2-just for common ports\n");
 	puts("3-request for specific port \n");
 	puts("4-request for specific services\n");
-	puts("4-request for specific range\n");
+	puts("5-request for specific range\n");
 
 	choice = getchar();
 	getc(stdin);
@@ -243,6 +269,7 @@ int ask_what_to_do(char *server_addr_str, char *port_str){
 			break;
 		case 5:
 
+			input_port_range(server_addr_str);
 			break;
 
 

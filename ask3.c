@@ -41,6 +41,13 @@ in_port_t input_port(char *port_str){
 	return server_port;
 }
 
+int input_domain(char *server_addr_str ){
+
+
+
+	return 0;
+}
+
 int input_ip(char *server_addr_str ){
 	puts("SERVER IP: [x.x.x.x (ipv4)] ");
 	fgets(server_addr_str,MAX_IP_STR_LEN,stdin);
@@ -61,6 +68,7 @@ int create_socket(){
 
 int connect_socket(int sock ,struct  sockaddr_in server_address){
         if(connect(sock, (const struct sockaddr *)&server_address, sizeof(server_address))<0){
+		printf("port %d is not open", ntohs(server_address.sin_port));
                 perror("connection failed!");
                 exit(EXIT_FAILURE);
         }else{

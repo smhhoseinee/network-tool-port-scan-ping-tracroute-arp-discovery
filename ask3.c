@@ -108,11 +108,11 @@ int create_socket(){
 
 int connect_socket(int sock ,struct  sockaddr_in server_address){
         if(connect(sock, (const struct sockaddr *)&server_address, sizeof(server_address))<0){
-		printf("port %d is not open", ntohs(server_address.sin_port));
+		printf("port %d is not open\n", ntohs(server_address.sin_port));
                 perror("connection failed!");
-                exit(EXIT_FAILURE);
+             //   exit(EXIT_FAILURE);
         }else{
-		printf("port %d is open", ntohs(server_address.sin_port));
+		printf("port %d is open\n", ntohs(server_address.sin_port));
 	}
 	return 0;
 }

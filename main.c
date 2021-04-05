@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
+#include <pthread.h>
+#include <assert.h>
 
 /*
  * ask host or ip
@@ -27,11 +29,19 @@ const int NUMBER_OF_SERVICES = 10;
 const int MIN_PORT_NUMBER= 1;
 const int MAX_WELLKNOWN_PORT_NUMBER= 1023;
 const int MAX_PORT_NUMBER= 65353;
+const int MAX_NUMBER_OF_THREADS = 7;
 
 int number_of_threads;
 
-int ask_what_to_do(char *server_addr_str, char *port_str);
+struct  thread_scan_port_range_args {
+	char *server_addr_str;
+	in_port_t server_port_start;
+	in_port_t server_port_end;
+	int sock;
+};
+// (char *server_addr_str,in_port_t server_port_start,in_port_t server_port_end,      int sock)
 
+int ask_what_to_do(char *server_addr_str, char *port_str);
 void remove_cr(char *str){
 	for(int i=0;i<strlen(str); i++){
 		if(str[i] == '\n'){
@@ -156,13 +166,78 @@ int scan_port(char *server_addr_str,in_port_t server_port,int sock){
 	return 0;
 }
 
+void *thread_scan_port_range(void *_args){
+	struct thread_scan_port_range_args *args = (struct thread_scan_port_range_args *) _args;	
+
+	char *server_addr_str = malloc(sizeof(char) * MAX_IP_STR_LEN);
+	server_addr_str = args->server_addr_str;
+	in_port_t server_port_start =  args->server_port_start;
+	in_port_t server_port_end =  args->server_port_end;
+	int sock = args->sock;
+
+	for(int i = server_port_start ; i < server_port_end ; i++ ){
+	//	printf("scan port %d started\n",i);
+		scan_port(server_addr_str, i, sock);
+	}
+
+	free (args);
+	pthread_exit (NULL);
+
+
+	//scan_port(server_addr_str , i, sock);
+}
 
 int scan_port_range(char *server_addr_str,in_port_t server_port_start, in_port_t server_port_end){
-
 	
 	int sock = create_socket();
-	for(int i = server_port_start; i <= server_port_end; i++){
-		scan_port(server_addr_str , i, sock);
+
+
+	int number_of_ports = server_port_end - server_port_start + 1 ;
+	int ports_of_each_thread = number_of_ports / number_of_threads ;
+	int remained_ports = number_of_ports % number_of_threads ;
+
+
+	int thread_counter = 0;
+	int i;
+	int result_code;
+
+
+	pthread_t threads[number_of_threads];
+
+	for(i = server_port_start; thread_counter < number_of_threads-1 ; i+=ports_of_each_thread){
+
+		struct thread_scan_port_range_args *args = malloc (sizeof (struct thread_scan_port_range_args));
+		args-> server_addr_str= server_addr_str;
+		args-> server_port_start = i;
+		args-> server_port_end = (i+ports_of_each_thread);
+		args-> sock = sock;
+
+
+		printf("thread %d started from %d to %d\n", (thread_counter+1), args->server_port_start, args->server_port_end);
+
+		pthread_create(&threads[thread_counter], NULL, thread_scan_port_range, args);
+
+		thread_counter++;
+
+
+	}
+
+	struct thread_scan_port_range_args *args = malloc (sizeof (struct thread_scan_port_range_args));
+	args-> server_addr_str= server_addr_str;
+	args-> server_port_start = i;
+	args-> server_port_end = server_port_end;
+	args-> sock = sock;
+
+	printf("thread %d started from %d to %d\n", (thread_counter+1),args-> server_port_start, args->server_port_end);
+
+	pthread_t thread_id;
+	pthread_create(&threads[thread_counter], NULL, thread_scan_port_range, args);
+
+	for(i = 0; i<number_of_threads;i++){
+//		printf("IN MAIN: wait for Thread %d has ended.\n", i+1);
+		result_code = pthread_join(threads[i], NULL);
+		assert(!result_code);
+		printf("IN MAIN: Thread %d has ended.\n", i+1);
 	}
 
 	return 0;
@@ -353,7 +428,11 @@ int main(int argc, char *argv[]){
 	//threads are specified in argc 
 	if(argc > 1){
 		//in_port_t number_of_threads = atoi(argv[1]);
-		number_of_threads = atoi(argv[1]);
+		if(atoi(argv[1])>=MAX_NUMBER_OF_THREADS){
+			number_of_threads = MAX_NUMBER_OF_THREADS;
+		}else{
+			number_of_threads = atoi(argv[1]);
+		}
 	}else{//default threads
 		number_of_threads = 1;
 	}

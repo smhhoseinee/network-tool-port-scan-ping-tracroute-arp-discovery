@@ -11,6 +11,14 @@ void *myThreadFun(void *vargp)
     printf("Printing GeeksQuiz from Thread \n");
     return NULL;
 }
+
+void *scan_port(char *server_addr_str,int server_port,int sock){
+
+
+
+	return 0;
+}
+
    
 int main()
 {

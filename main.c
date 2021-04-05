@@ -10,6 +10,11 @@
 #include <netdb.h>
 #include <pthread.h>
 #include <assert.h>
+#include <sys/time.h>
+#include <fcntl.h>
+#include <netinet/tcp.h>
+
+
 
 /*
  * ask host or ip
@@ -114,6 +119,30 @@ int input_ip(char *server_addr_str ){
 int create_socket(){
 	//socket() creation
 	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP  );
+        //fcntl(sock, F_SETFL, O_NONBLOCK);
+	
+	int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
+	setsockopt(sock , IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
+
+
+	struct timeval tv_out;
+	tv_out.tv_sec = 1;
+	tv_out.tv_usec = 0;
+
+
+	int setsockopt_status = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,(const char*)&tv_out, sizeof tv_out);
+
+	
+	//int ttl = 6;
+//	setsockopt(sock, IPPROTO_TCP, IP_TTL, &ttl, sizeof(ttl));
+
+	if(setsockopt_status != 0){
+		perror("setsockopt() failed");
+		exit(EXIT_FAILURE);
+	}else{
+		printf("set_setsockopt worked\n" );
+	}
+
 	if(sock < 0){
 		perror("socket() failed");
 		exit(EXIT_FAILURE);

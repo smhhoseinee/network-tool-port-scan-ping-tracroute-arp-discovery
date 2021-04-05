@@ -28,6 +28,8 @@ const int MIN_PORT_NUMBER= 1;
 const int MAX_WELLKNOWN_PORT_NUMBER= 1023;
 const int MAX_PORT_NUMBER= 65353;
 
+int number_of_threads;
+
 int ask_what_to_do(char *server_addr_str, char *port_str);
 
 void remove_cr(char *str){
@@ -315,7 +317,6 @@ int ask_ip_or_host(char *server_addr_str, char *port_str){
 			ask_what_to_do(server_addr_str, port_str);
 			break;
 
-
 		case 2:
 			printf("you chose hostname\n");
 			input_host(server_addr_str,port_str);
@@ -325,17 +326,16 @@ int ask_ip_or_host(char *server_addr_str, char *port_str){
 		default:
 			printf("Error! operator is not correct");
 	}
-
-
        	return 0;
 }
 
-int main(){
+int main(int argc, char *argv[]){
 
 
 	// get ip and port
 	char *server_addr_str = malloc(sizeof(char) * MAX_IP_STR_LEN);
 	char *port_str = malloc(sizeof(char) * MAX_PORT_STR_LEN);
+
 
 	if(server_addr_str == NULL){
 		fputs("memory allocation failed (ip)",stderr);
@@ -349,8 +349,17 @@ int main(){
         memset(port_str, '\0', MAX_PORT_STR_LEN);
 
 //	ask_ip_or_host(server_addr_str,port_str);
-	ask_ip_or_host(server_addr_str, port_str);
 
+	//threads are specified in argc 
+	if(argc > 1){
+		//in_port_t number_of_threads = atoi(argv[1]);
+		number_of_threads = atoi(argv[1]);
+	}else{//default threads
+		number_of_threads = 1;
+	}
+
+
+	ask_ip_or_host(server_addr_str, port_str);
 
 	//convert port to useful format
   //	in_port_t server_port = atoi(port_str);

@@ -37,6 +37,7 @@ const int MAX_PORT_NUMBER= 65353;
 const int MAX_NUMBER_OF_THREADS = 7;
 
 int number_of_threads;
+int timeout_in_sec;
 
 struct  thread_scan_port_range_args {
 	char *server_addr_str;
@@ -118,30 +119,40 @@ int input_ip(char *server_addr_str ){
 
 int create_socket(){
 	//socket() creation
-	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP  );
-        //fcntl(sock, F_SETFL, O_NONBLOCK);
+//	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP  );
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+
+
 	
-	int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
-	setsockopt(sock , IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
+//        fcntl(sock, F_SETFL, O_NONBLOCK);
+	
+//	int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
+//	setsockopt(sock , IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
 
 
 	struct timeval tv_out;
-	tv_out.tv_sec = 1;
+	tv_out.tv_sec = timeout_in_sec;
 	tv_out.tv_usec = 0;
 
+	setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv_out, sizeof(tv_out));
 
-	int setsockopt_status = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,(const char*)&tv_out, sizeof tv_out);
+//	if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv_out,
+//				sizeof(tv_out)) < 0)
+//		perror("setsockopt failed\n");
+
+//	int setsockopt_status = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,(const char*)&tv_out, sizeof tv_out);
+	
 
 	
 	//int ttl = 6;
 //	setsockopt(sock, IPPROTO_TCP, IP_TTL, &ttl, sizeof(ttl));
 
-	if(setsockopt_status != 0){
-		perror("setsockopt() failed");
-		exit(EXIT_FAILURE);
-	}else{
-		printf("set_setsockopt worked\n" );
-	}
+//	if(setsockopt_status != 0){
+//		perror("setsockopt() failed");
+//		exit(EXIT_FAILURE);
+//	}else{
+//		printf("setsetsockopt worked\n" );
+//	}
 
 	if(sock < 0){
 		perror("socket() failed");
@@ -461,6 +472,12 @@ int main(int argc, char *argv[]){
 			number_of_threads = MAX_NUMBER_OF_THREADS;
 		}else{
 			number_of_threads = atoi(argv[1]);
+		}
+
+		if(argc > 2){//timeout also specified
+			timeout_in_sec = atoi(argv[2]);
+		}else{
+			timeout_in_sec = 4;
 		}
 	}else{//default threads
 		number_of_threads = 1;

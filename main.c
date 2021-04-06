@@ -479,8 +479,10 @@ int main(int argc, char *argv[]){
 		}else{
 			timeout_in_sec = 4;
 		}
+		printf("timeout=%d\n",timeout_in_sec);
 	}else{//default threads
 		number_of_threads = 1;
+		printf("argc less than 1 \n");
 	}
 
 

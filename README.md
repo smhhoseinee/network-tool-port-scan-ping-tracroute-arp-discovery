@@ -40,12 +40,15 @@ how to use :
 first compile main.c
 
 `` gcc main.c -lpthread ``
+
 run the the executable with default thread and timeout:
 
 `` ./a.out ``
+
 run with specified threads and timeout
 
 `` ./a.out <number_of_threads> <timeout> ``
+
 i.e : 3 threads running and 4 sec timeout 
 
 `` ./a.out 3 4 ``

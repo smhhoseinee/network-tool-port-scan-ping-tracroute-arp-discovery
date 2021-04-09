@@ -30,9 +30,10 @@ I chose C language for this project because I has the ability to open RAW SOCKET
 C is a recommended language for developing in lower layers of network projects.
 
 
-########
-##phase 1
-########
+---
+
+#phase 1
+
 
 in this phase we created a port scanner wich uses socket connection to check wether a port is open or not
 

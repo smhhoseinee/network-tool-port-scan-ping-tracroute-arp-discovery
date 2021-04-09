@@ -1,6 +1,5 @@
 # computer-network-project
-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="200" height="400" />
-
+ <img src="https://github.com/smhhoseinee/computer-network-project/blob/main/res/logo.jpg" width="200" height="200" />
 
 phase0 : 
 a report about 3 items :

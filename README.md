@@ -28,3 +28,21 @@ https://onedrive.live.com/view.aspx?resid=832FBD00D051B02F!25155&ithint=file%2cd
 
 I chose C language for this project because I has the ability to open RAW SOCKETs also we could implement and use heap on it.
 C is a recommended language for developing in lower layers of network projects.
+
+
+########
+##phase 1
+########
+
+in this phase we created a port scanner wich uses socket connection to check wether a port is open or not
+
+how to use : 
+first compile main.c
+`` gcc main.c -lpthread ``
+run the the executable with default thread and timeout:
+`` ./a.out ``
+run with specified threads and timeout
+`` ./a.out <number_of_threads> <timeout> ``
+i.e : 3 threads running and 4 sec timeout 
+`` ./a.out 3 4 ``
+

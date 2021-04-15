@@ -30,7 +30,8 @@
 
 // Gives the timeout delay for receiving packets
 // in seconds
-#define RECV_TIMEOUT 1
+// #define RECV_TIMEOUT 1
+int RECV_TIMEOUT = 1;
 
 // Define the Ping Loop
 int pingloop=1;
@@ -45,7 +46,8 @@ struct ping_pkt
 
 // Calculating the Check Sum
 unsigned short checksum(void *b, int len)
-{ unsigned short *buf = b;
+{ 
+	unsigned short *buf = b;
 	unsigned int sum=0;
 	unsigned short result;
 
@@ -188,13 +190,9 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 
 		if ( recvfrom(ping_sockfd, &pckt, sizeof(pckt), 0,
 					(struct sockaddr*)&r_addr, &addr_len) <= 0
-				&& msg_count>1)
-		{
+				&& msg_count>1){
 			printf("\nPacket receive failed!\n");
-		}
-
-		else
-		{
+		}else{
 			clock_gettime(CLOCK_MONOTONIC, &time_end);
 
 			double timeElapsed = ((double)(time_end.tv_nsec -
@@ -230,7 +228,7 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 	total_msec = (tfe.tv_sec-tfs.tv_sec)*1000.0+
 		timeElapsed;
 
-		printf("\n===%s ping statistics===\n", ping_ip);
+	printf("\n===%s ping statistics===\n", ping_ip);
 	printf("\n%d packets sent, %d packets received, %f percent packet loss. Total time: %Lf ms.\n\n",
 			msg_count, msg_received_count,
 			((msg_count - msg_received_count)/msg_count) * 100.0,
@@ -246,40 +244,54 @@ int main(int argc, char *argv[])
 	int addrlen = sizeof(addr_con);
 	char net_buf[NI_MAXHOST];
 
-	if(argc!=2)
+	if(argc < 2)
 	{
-		printf("\nFormat %s <address>\n", argv[0]);
+		printf("\nFormat %s <address> ... <address>\n", argv[0]);
 		return 0;
 	}
 
-	ip_addr = dns_lookup(argv[1], &addr_con);
-	if(ip_addr==NULL)
-	{
-		printf("\nDNS lookup failed! Could not resolve hostname!\n");
-		return 0;
+
+	for(int i=1; i<argc; i++){
+
+		if (i + 1 != argc)
+		{
+			if (strcmp(argv[i], "-s") == 0 ||strcmp(argv[i], "--size") == 0  ) // This is your parameter name
+			{
+				char* filename = argv[i + 1];    // The next value in the array is your value
+				i++;    // Move to the next flag
+			}
+		}
+
+
+		ip_addr = dns_lookup(argv[i], &addr_con);
+		if(ip_addr==NULL)
+		{
+			printf("\nDNS lookup failed! Could not resolve hostname!\n");
+			return 0;
+		}
+
+		reverse_hostname = reverse_dns_lookup(ip_addr);
+		printf("\nTrying to connect to '%s' IP: %s\n",
+				argv[1], ip_addr);
+		printf("\nReverse Lookup domain: %s",
+				reverse_hostname);
+
+		//socket()
+		sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+		if(sockfd<0)
+		{
+			printf("\nSocket file descriptor not received!!\n");
+			return 0;
+		}
+		else
+			printf("\nSocket file descriptor %d received\n", sockfd);
+
+		signal(SIGINT, intHandler);//catching interrupt
+
+		//send pings continuously
+		send_ping(sockfd, &addr_con, reverse_hostname,
+				ip_addr, argv[1]);
 	}
-
-	reverse_hostname = reverse_dns_lookup(ip_addr);
-	printf("\nTrying to connect to '%s' IP: %s\n",
-			argv[1], ip_addr);
-	printf("\nReverse Lookup domain: %s",
-			reverse_hostname);
-
-	//socket()
-	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if(sockfd<0)
-	{
-		printf("\nSocket file descriptor not received!!\n");
-		return 0;
-	}
-	else
-		printf("\nSocket file descriptor %d received\n", sockfd);
-
-	signal(SIGINT, intHandler);//catching interrupt
-
-	//send pings continuously
-	send_ping(sockfd, &addr_con, reverse_hostname,
-			ip_addr, argv[1]);
 
 	return 0;
 }

@@ -22,7 +22,8 @@
 
 // Define the Packet Constants
 // ping packet size
-#define PING_PKT_S 64
+//#define PING_PKT_S 64
+int PING_PKT_S = 64;
 
 // Automatic port number
 #define PORT_NO 0
@@ -33,7 +34,7 @@
 // Gives the timeout delay for receiving packets
 // in seconds
 // #define RECV_TIMEOUT 1
-int RECV_TIMEOUT = 1;
+int RECV_TIMEOUT=1;
 
 // Define the Ping Loop
 int pingloop=1;
@@ -131,7 +132,7 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 	long double rtt_msec=0, total_msec=0;
 	struct timeval tv_out;
 	tv_out.tv_sec = RECV_TIMEOUT;
-	printf(" RECV_TIMEOUT set to %d\n", RECV_TIMEOUT);
+	printf(" RECV_TIMEOUT set to before send %ld\n",tv_out.tv_sec);
 	tv_out.tv_usec = 0;
 
 	clock_gettime(CLOCK_MONOTONIC, &tfs);
@@ -247,17 +248,25 @@ int main(int argc, char *argv[])
 	int addrlen = sizeof(addr_con);
 	char net_buf[NI_MAXHOST];
 
+	bool arg_is_valid[argc];
+
+	printf("argc=%d\n",argc);
 	if(argc < 2)
 	{
-		printf("\nFormat %s <address> ... <address>\n", argv[0]);
+		printf("\nFormat %s <address> ... <address> -s <size_of_packets> -t <timeout> \n", argv[0]);
 		return 0;
 	}
 
 
+	for(int i=1; i<argc; i++)
+		arg_is_valid[i] = true;
+
 	for(int i=1; i<argc; i++){
 
-		bool arg_is_valid = true;
-		if (i + 1 != argc)
+		printf("\n\ni=%d\n",i);
+		printf("argv%d=%s\n",i,argv[i]);
+
+		if (i+1 != argc)
 		{
 			if (strcmp(argv[i], "-s") == 0 ||strcmp(argv[i], "--size") == 0  ) // This is your parameter name
 			{
@@ -266,13 +275,17 @@ int main(int argc, char *argv[])
 			}else if (strcmp(argv[i], "-t") == 0 ){
 				RECV_TIMEOUT = atoi(argv[i+1]);
 				i++;    // Move to the next flag
-				arg_is_valid = false;
-				printf(" RECV_TIMEOUT set to %d\n", RECV_TIMEOUT);
+				arg_is_valid[i] = false;
+				arg_is_valid[i+1] = false;
+				printf(" TIMEOUT set to in if %d\n", RECV_TIMEOUT);
 			}
 
 		}
+	}
 
-		if(arg_is_valid){
+	for(int i=1; i<argc; i++){
+	
+		if(arg_is_valid[i]){
 
 			ip_addr = dns_lookup(argv[i], &addr_con);
 			if(ip_addr==NULL)

@@ -17,8 +17,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <time.h>
-#include <stdbool.h>
-
 
 // Define the Packet Constants
 // ping packet size
@@ -131,7 +129,6 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 	long double rtt_msec=0, total_msec=0;
 	struct timeval tv_out;
 	tv_out.tv_sec = RECV_TIMEOUT;
-	printf(" RECV_TIMEOUT set to %d\n", RECV_TIMEOUT);
 	tv_out.tv_usec = 0;
 
 	clock_gettime(CLOCK_MONOTONIC, &tfs);
@@ -256,54 +253,47 @@ int main(int argc, char *argv[])
 
 	for(int i=1; i<argc; i++){
 
-		bool arg_is_valid = true;
 		if (i + 1 != argc)
 		{
 			if (strcmp(argv[i], "-s") == 0 ||strcmp(argv[i], "--size") == 0  ) // This is your parameter name
 			{
 				char* filename = argv[i + 1];    // The next value in the array is your value
 				i++;    // Move to the next flag
-			}else if (strcmp(argv[i], "-t") == 0 ){
-				RECV_TIMEOUT = atoi(argv[i+1]);
-				i++;    // Move to the next flag
-				arg_is_valid = false;
-				printf(" RECV_TIMEOUT set to %d\n", RECV_TIMEOUT);
 			}
-
 		}
 
-		if(arg_is_valid){
 
-			ip_addr = dns_lookup(argv[i], &addr_con);
-			if(ip_addr==NULL)
-			{
-				printf("\nDNS lookup failed! Could not resolve hostname!\n");
-				return 0;
-			}
-
-			reverse_hostname = reverse_dns_lookup(ip_addr);
-			printf("\nTrying to connect to '%s' IP: %s\n",
-					argv[i], ip_addr);
-			printf("\nReverse Lookup domain: %s",
-					reverse_hostname);
-
-			//socket()
-			sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-			if(sockfd<0)
-			{
-				printf("\nSocket file descriptor not received!!\n");
-				return 0;
-			}
-			else
-				printf("\nSocket file descriptor %d received\n", sockfd);
-
-			signal(SIGINT, intHandler);//catching interrupt
-
-			//send pings continuously
-			send_ping(sockfd, &addr_con, reverse_hostname,
-					ip_addr, argv[i]);
+		ip_addr = dns_lookup(argv[i], &addr_con);
+		if(ip_addr==NULL)
+		{
+			printf("\nDNS lookup failed! Could not resolve hostname!\n");
+			return 0;
 		}
+
+		reverse_hostname = reverse_dns_lookup(ip_addr);
+		printf("\nTrying to connect to '%s' IP: %s\n",
+				argv[1], ip_addr);
+		printf("\nReverse Lookup domain: %s",
+				reverse_hostname);
+
+		//socket()
+		sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+		if(sockfd<0)
+		{
+			printf("\nSocket file descriptor not received!!\n");
+			return 0;
+		}
+		else
+			printf("\nSocket file descriptor %d received\n", sockfd);
+
+		signal(SIGINT, intHandler);//catching interrupt
+
+		//send pings continuously
+		send_ping(sockfd, &addr_con, reverse_hostname,
+				ip_addr, argv[1]);
 	}
 
 	return 0;
 }
+
+

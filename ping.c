@@ -244,7 +244,9 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 				}
 				else
 				{
-					printf("%d bytes from %s (h: %s) (%s) ttl=%d rtt = %Lf ms seq=%d.\n",
+
+				//	printf("%d bytes from %s (h: %s) (%s) msg_seq=%d ttl=%d rtt = %Lf ms.\n",
+					printf("%d bytes from  %s (h: %s) IP<%s> ttl=%d rtt = %Lf ms seq=%d.\n",
 						PING_PKT_S, ping_dom, rev_host, ping_ip, ttl_val, rtt_msec, msg_count);
 
 					msg_received_count++;

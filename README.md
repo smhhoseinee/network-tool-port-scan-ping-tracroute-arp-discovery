@@ -33,7 +33,7 @@ C is a recommended language for developing in lower layers of network projects.
 
 ---
 
-### phase 1
+### phase 1 : port scanner
 
 
 in this phase we created a port scanner wich uses socket connection to check wether a port is open or not
@@ -41,17 +41,64 @@ in this phase we created a port scanner wich uses socket connection to check wet
 how to use : 
 first compile main.c
 
-`` gcc main.c -lpthread ``
+``` 
+gcc main.c -lpthread 
+```
 
 run the the executable with default thread and timeout:
 
-`` ./a.out ``
+``` 
+./a.out 
+```
 
 run with specified threads and timeout
 
-`` ./a.out <number_of_threads> <timeout> ``
+``` 
+./a.out <number_of_threads> <timeout> 
+```
 
 i.e : 3 threads running and 4 sec timeout 
 
-`` ./a.out 3 4 ``
+```
+./a.out 3 4 
+```
 
+
+
+---
+
+### phase 2 : ping tool
+
+you could ping each domain or ip using this tool
+
+```
+./ping <hostname>
+./ping github.com
+```
+
+ping multiple hostss parallel:
+```
+./ping google.com Instagram.com 8.8.8.8 github.com 
+```
+
+###flags:
+``-s , --size`` set size of packets to send (default value is 64)
+``-t , --timeout`` set time wait for response (default is 1 second)
+
+
+``-s`` example :
+```
+./ping -s <size> <hostname>
+./ping -s 126 google.com
+```
+
+``-t`` example :
+```
+./ping -t <timeout> <hostname>
+./ping -t 5 google.com
+```
+
+a complicated example:
+```
+./ping google.com -t 4 Instagram.com 8.8.8.8 github.com -s 120 
+```

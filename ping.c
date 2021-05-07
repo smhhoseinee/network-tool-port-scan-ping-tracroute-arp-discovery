@@ -246,9 +246,10 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 				{
 
 				//	printf("%d bytes from %s (h: %s) (%s) msg_seq=%d ttl=%d rtt = %Lf ms.\n",
-					printf("%d bytes from  %s (h: %s) IP<%s> ttl=%d rtt = %Lf ms seq=%d.\n",
-						PING_PKT_S, ping_dom, rev_host, ping_ip, ttl_val, rtt_msec, msg_count);
+			//		printf("%d bytes from  %s (h: %s) IP<%s> ttl=%d rtt = %Lf ms seq=%d.\n",
+			//			PING_PKT_S, ping_dom, rev_host, ping_ip, ttl_val, rtt_msec, msg_count);
 
+					printf("Reply from IP<%s> in %Lfms seq=%d\n", ping_ip, rtt_msec, msg_count);
 					msg_received_count++;
 				}
 			}

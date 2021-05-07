@@ -39,28 +39,28 @@ C is a recommended language for developing in lower layers of network projects.
 in this phase we created a port scanner wich uses socket connection to check wether a port is open or not
 
 how to use : 
-first compile main.c
+first compile port_scanner.c  
 
 ``` 
-gcc main.c -lpthread 
+gcc port_scanner.c -o port_scanner -lpthread
 ```
 
 run the the executable with default thread and timeout:
 
 ``` 
-./a.out 
+./port_scanner 
 ```
 
 run with specified threads and timeout
 
 ``` 
-./a.out <number_of_threads> <timeout> 
+./port_scanner <number_of_threads> <timeout> 
 ```
 
 i.e : 3 threads running and 4 sec timeout 
 
 ```
-./a.out 3 4 
+./port_scanner 3 4 
 ```
 
 

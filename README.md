@@ -39,7 +39,7 @@ C is a recommended language for developing in lower layers of network projects.
 in this phase we created a port scanner wich uses socket connection to check wether a port is open or not
 
 how to use : 
-first compile port_scanner.c  
+first compile `port_scanner.c`  
 
 ``` 
 gcc port_scanner.c -o port_scanner -lpthread
@@ -68,6 +68,12 @@ i.e : 3 threads running and 4 sec timeout
 ---
 
 ### phase 2 : ping tool
+
+first compile `ping.c`  
+
+``` 
+gcc ping.c -o ping -lpthread
+```
 
 you could ping each domain or ip using this tool
 

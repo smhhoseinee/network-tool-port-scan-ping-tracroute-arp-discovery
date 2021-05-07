@@ -81,7 +81,7 @@ ping multiple hostss parallel:
 ./ping google.com Instagram.com 8.8.8.8 github.com 
 ```
 
-###flags:
+### flags:
 ``-s , --size`` set size of packets to send (default value is 64)
 ``-t , --timeout`` set time wait for response (default is 1 second)
 

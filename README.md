@@ -108,3 +108,66 @@ a complicated example:
 ```
 ./ping google.com -t 4 Instagram.com 8.8.8.8 github.com -s 120 
 ```
+
+---
+
+### phase 3 : traceroute tool
+
+first compile `traceroute.c`  
+
+``` 
+gcc traceroute.c -o traceroute -lpthread
+```
+
+you could traceroute each domain or ip using this tool
+
+```
+./traceroute <hostname>
+./traceroute github.com
+```
+
+to see more just you could use -h 
+
+```
+./traceroute -h
+```
+
+
+
+### flags:
+
+
+``-s , --size`` set size of packets to send (default value is 64)
+
+``-t , --timeout`` set time wait for response (default is 1 second)
+
+``-m , --maxtry `` set MAX TRY
+
+``-b , --bttl`` beginning ttl value
+
+``-f , --fttl`` final ttl value
+
+``-p , --port`` sending port number
+
+``-t , --timeout`` timeout(maximum waiting time)
+
+``-s , --size`` size of each packet
+
+
+
+``-s`` example :
+```
+./ping -s <size> <hostname>
+./ping -s 126 google.com
+```
+
+``-t`` example :
+```
+./ping -t <timeout> <hostname>
+./ping -t 5 google.com
+```
+
+a complicated example:
+```
+./ping google.com -t 4 Instagram.com 8.8.8.8 github.com -s 120 
+```

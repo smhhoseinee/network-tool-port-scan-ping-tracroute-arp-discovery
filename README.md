@@ -157,17 +157,17 @@ to see more just you could use -h
 
 ``-s`` example :
 ```
-./ping -s <size> <hostname>
-./ping -s 126 google.com
+./traceroute  <hostname> -s <size>
+./traceroute  google.com -s 126
 ```
 
 ``-t`` example :
 ```
-./ping -t <timeout> <hostname>
-./ping -t 5 google.com
+./traceroute <hostname> -t <timeout> 
+./traceroute google.com -t 5 
 ```
 
 a complicated example:
 ```
-./ping google.com -t 4 Instagram.com 8.8.8.8 github.com -s 120 
+./traceroute google.com -s 15  -b 1 -f 64
 ```

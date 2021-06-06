@@ -19,7 +19,8 @@
 
 // Define the Packet Constants
 // ping packet size
-#define PING_PKT_S 64
+//#define PING_PKT_S 64
+int  PING_PKT_S = 64;
 
 // Automatic port number
 #define PORT_NO 0
@@ -32,9 +33,11 @@
 //#define RECV_TIMEOUT 1
 int RECV_TIMEOUT = 1;
 int MAX_TRY= 3;
-int STARTING_TTL = 3;
-int FINAL_TTL = 64;
+int STARTING_TTL = 1;
+int FINAL_TTL = 6;
+bool CONTINUE_TRACE = true;
 
+const int PACKET_MIN_SIZE = 10;
 const int MAX_PORT_STR_LEN = 7;
 // Define the Ping Loop
 int pingloop=4;
@@ -43,7 +46,9 @@ int pingloop=4;
 // ping packet structure
 struct ping_pkt{
 	struct icmphdr hdr;
-	char msg[PING_PKT_S-sizeof(struct icmphdr)];
+	//char msg[PING_PKT_S-sizeof(struct icmphdr)];
+	//char *msg = malloc(PING_PKT_S-sizeof(struct icmphdr));
+	char *msg;
 };
 
 // Calculating the Check Sum
@@ -75,6 +80,7 @@ int atoint(char s[]){
 // Interrupt handler
 void intHandler(int dummy){
 	pingloop=0;
+	CONTINUE_TRACE = false;
 }
 
 // Performs a DNS lookup
@@ -113,7 +119,7 @@ char* reverse_dns_lookup(char *ip_addr){
 
 	if (getnameinfo((struct sockaddr *) &temp_addr, len, buf,
 				sizeof(buf), NULL, 0, NI_NAMEREQD)){
-		printf("Could not resolve reverse lookup of hostname\n");
+//		printf("Could not resolve reverse lookup of hostname\n");
 		return NULL;
 	}
 	ret_buf = (char*)malloc((strlen(buf) +1)*sizeof(char) );
@@ -126,6 +132,7 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 		char *ping_dom, char *ping_ip, char *rev_host, int ttl_val){
 
 	int msg_count=0, i, addr_len, flag=1,msg_received_count=0;
+	int number_of_tries = 0;
 
 	struct ping_pkt pckt;
 
@@ -143,7 +150,7 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 		printf("\nSetting socket options to TTL failed!\n");
 		return;
 	}else{
-		printf("\nSocket set to TTL..\n");
+//		printf("\nSocket set to TTL..\n");
 	}
 
 	// setting timeout of recv setting
@@ -153,7 +160,11 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 	pingloop = MAX_TRY;
 	while(pingloop){
 
+		char *reverse_hostname;
 		pingloop--;
+		number_of_tries++;
+
+
 		// flag is whether packet was sent or not
 		flag=1;
 
@@ -163,8 +174,20 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 		pckt.hdr.type = ICMP_ECHO;
 		pckt.hdr.un.echo.id = getpid();
 
-		for ( i = 0; i < sizeof(pckt.msg)-1; i++ )
-			pckt.msg[i] = i+'0';
+		int packet_size = PING_PKT_S-sizeof(struct icmphdr);
+		//pckt.msg = malloc(PING_PKT_S-sizeof(struct icmphdr));
+		pckt.msg = malloc(packet_size);
+
+		if(pckt.msg == NULL){
+			fputs("memory allocation for msg failed",stderr);
+			exit(EXIT_FAILURE);
+		}
+
+		//for ( i = 0; i < sizeof(pckt.msg)-1; i++ )
+		for ( i = 0; i < packet_size -1; i++ )
+			//pckt.msg[i] = i+'0';
+			pckt.msg[i] = i%10+'0';
+
 
 		pckt.msg[i] = 0;
 		pckt.hdr.un.echo.sequence = msg_count++;
@@ -202,8 +225,9 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 					printf("Error..Packet received with ICMP type %d code %d\n", pckt.hdr.type, pckt.hdr.code);
 				}else{
 					pingloop=0;
-					printf("%d bytes from %s (h: %s) (%s) msg_seq=%d ttl=%d rtt = %Lf ms.\n", PING_PKT_S, ping_dom, rev_host,ping_ip, msg_count,ttl_val, rtt_msec);
-					printf("saddr = %d, %s: %d\n", r_addr.sin_family, inet_ntoa(r_addr.sin_addr), r_addr.sin_port);
+					reverse_hostname = reverse_dns_lookup(inet_ntoa(r_addr.sin_addr));
+					printf("HOP<%d> <==> <%s>(reverse hosntame = <%s>) in %Lfms after %d tries \n",
+						       	ttl_val, inet_ntoa(r_addr.sin_addr),  reverse_hostname, rtt_msec, number_of_tries);
 					msg_received_count++;
 				}
 			}
@@ -216,8 +240,6 @@ void send_ping(int ping_sockfd, struct sockaddr_in *ping_addr,
 
 	total_msec = (tfe.tv_sec-tfs.tv_sec)*1000.0 + timeElapsed;
 
-	printf("\n===%s ping statistics===\n", ping_ip);
-	printf("\n%d packets sent, %d packets received, %f percent packet loss. Total time: %Lf ms.\n\n", msg_count, msg_received_count, ((msg_count - msg_received_count)/msg_count) * 100.0, total_msec);
 }
 
 // Driver Code
@@ -229,6 +251,26 @@ int main(int argc, char *argv[]){
 	char net_buf[NI_MAXHOST];
 
 	in_port_t server_port;
+
+	if (strcmp(argv[1], "-h" ) == 0 || strcmp(argv[1], "--help" ) == 0  )
+	{
+		printf(" -m or --maxtry : MAX TRY\n");
+		printf(" -b or --bttl: beginning ttl value\n");
+		printf(" -f or --fttl: final ttl value\n");
+		printf(" -p or --port: sending port number\n");
+		printf(" -t or --timeout: timeout(maximum waiting time)\n");
+		printf(" -s or --size: size of each packet\n");
+		return 0;
+	}
+
+
+	if(argc < 3){
+		printf("\nFormat %s <address> <options>\n", argv[0]);
+		printf("use -h to see more \n");
+		return 0;
+	}
+
+
 
 	for(int i=1; i<argc; i++){
 
@@ -242,7 +284,7 @@ int main(int argc, char *argv[]){
 				MAX_TRY = atoi(argv[i+1]);
 				printf("MAX TRY set to %d\n", MAX_TRY);
 				i++;    // Move to the next flag
-			}else if (strcmp(argv[i], "-s" ) == 0 || strcmp(argv[i], "--sttl" ) == 0  )
+			}else if (strcmp(argv[i], "-b" ) == 0 || strcmp(argv[i], "--bttl" ) == 0  )
 			{
 				STARTING_TTL = atoi(argv[i+1]);
 				printf("STARTING_TTL set %d\n", STARTING_TTL);
@@ -263,6 +305,15 @@ int main(int argc, char *argv[]){
 				RECV_TIMEOUT = atoi(argv[i+1]);
 				printf(" TIMEOUT set to %d\n", RECV_TIMEOUT);
 				i++;    // Move to the next flag
+			}else if (strcmp(argv[i], "-s") == 0 ||strcmp(argv[i], "--size") == 0  ) // This is your parameter name
+			{
+				int input_packet_size = atoi(argv[i+1]);
+				if(input_packet_size > PACKET_MIN_SIZE){
+					PING_PKT_S = input_packet_size;
+				}
+				printf("packetsize chosen=%d\n",PING_PKT_S);
+				i++;    // Move to the next flag
+
 			}
 
 
@@ -294,11 +345,8 @@ int main(int argc, char *argv[]){
 
 	//int ttl = atoint(argv[2]);
 	//send pings continuously
-	for(int ttl = STARTING_TTL; ttl <= FINAL_TTL; ttl++){
-
-		printf("Start ttl=%d \n", ttl);
+	for(int ttl = STARTING_TTL; ttl <= FINAL_TTL && CONTINUE_TRACE; ttl++){
 		send_ping(sockfd, &addr_con, reverse_hostname,ip_addr, argv[1],ttl);
-		printf("end ttl=%d \n", ttl);
 	}
 	return 0;
 }

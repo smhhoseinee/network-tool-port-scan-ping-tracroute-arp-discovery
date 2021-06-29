@@ -186,6 +186,12 @@ struct sockaddr_in create_struct_sockaddr(struct sockaddr_in server_address, cha
 	memset(&server_address,0,sizeof(server_address));
 	server_address.sin_family = AF_INET;
         int numerical_address = inet_pton(AF_INET,server_addr_str, &server_address.sin_addr.s_addr);
+//	printf("^^^^^^^^^^ ip is :  %d \n", ntohs(server_address.sin_addr.s_addr));
+//	server_address.sin_addr.s_addr++;
+//	printf("^^^^^^^^^^ ip is :  %d \n", ntohs(server_address.sin_addr.s_addr));
+//	server_address.sin_addr.s_addr++;
+//      inet_ntop(AF_INET, &server_address.sin_addr.s_addr ,server_addr_str, sizeof(char) * MAX_IP_STR_LEN );
+//	printf("^^^^^^^^^^ ip is :  %s \n", server_addr_str);
 
 	if(numerical_address == 0){
                 fputs("invalid IPv4", stderr);

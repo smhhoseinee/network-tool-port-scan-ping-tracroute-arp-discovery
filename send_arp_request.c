@@ -34,59 +34,92 @@
 #include <linux/if_ether.h>   // ETH_P_ARP = 0x0806
 #include <linux/if_packet.h>  // struct sockaddr_ll (see man 7 packet)
 #include <net/ethernet.h>
-  
+
 #include <errno.h>            // errno, perror()
-  
+
+#include <netinet/ip_icmp.h>
+#include <time.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <time.h>
+#include <stdbool.h>
+#include <pthread.h>
+#include <assert.h>
+
+
 // Define a struct for ARP header
 typedef struct _arp_hdr arp_hdr;
 struct _arp_hdr {
-  uint16_t htype;
-  uint16_t ptype;
-  uint8_t hlen;
-  uint8_t plen;
-  uint16_t opcode;
-  uint8_t sender_mac[6];
-  uint8_t sender_ip[4];
-  uint8_t target_mac[6];
-  uint8_t target_ip[4];
+	uint16_t htype;
+	uint16_t ptype;
+	uint8_t hlen;
+	uint8_t plen;
+	uint16_t opcode;
+	uint8_t sender_mac[6];
+	uint8_t sender_ip[4];
+	uint8_t target_mac[6];
+	uint8_t target_ip[4];
 };
-  
+
 // Define some constants.
 #define ETH_HDRLEN 14      // Ethernet header length
 #define IP4_HDRLEN 20      // IPv4 header length
 #define ARP_HDRLEN 28      // ARP header length
 #define ARPOP_REQUEST 1    // Taken from &lt;linux/if_arp.h&gt;
-  
+
 // Function prototypes
 char *allocate_strmem (int);
 uint8_t *allocate_ustrmem (int);
-  
+
 void remove_cr(char *str){
-        for(int i=0;i<strlen(str); i++){
-                if(str[i] == '\n'){
-                        str[i] = '\0';
-                        return;
-                }
-        }
+	for(int i=0;i<strlen(str); i++){
+		if(str[i] == '\n'){
+			str[i] = '\0';
+			return;
+		}
+	}
 }
 
-int
+struct sockaddr_in create_struct_sockaddr(struct sockaddr_in server_address, char *server_addr_str, in_port_t server_port){
+        //create struct sockaddr
+        memset(&server_address,0,sizeof(server_address));
+        server_address.sin_family = AF_INET;
+        int numerical_address = inet_pton(AF_INET,server_addr_str, &server_address.sin_addr.s_addr);
+
+        if(numerical_address == 0){
+                fputs("invalid IPv4", stderr);
+                exit(EXIT_FAILURE);
+        }
+        if(numerical_address < 0){
+                fputs("p to n failed",stderr);
+                exit(EXIT_FAILURE);
+        }
+        server_address.sin_port = htons(server_port);
+
+        return server_address;
+}
+
+
+	int
 main (int argc, char **argv)
 {
-  int i, status, frame_length, sd, bytes;
-  char *interface, *start_ip_dest, *src_ip;
-  arp_hdr arphdr;
-  uint8_t *src_mac, *dst_mac, *ether_frame;
-  struct addrinfo hints, *res;
-  struct sockaddr_in *ipv4;
-  struct sockaddr_ll device;
-  struct ifreq ifr;
+	int i, status, frame_length, sd, bytes;
+	char *interface, *start_ip_dest, *src_ip;
+	arp_hdr arphdr;
+	uint8_t *src_mac, *dst_mac, *ether_frame;
+	struct addrinfo hints, *res;
+	struct sockaddr_in *ipv4;
+	struct sockaddr_ll device;
+	struct ifreq ifr;
 
-  in_port_t starting_ip;
-  in_port_t server_port_end;
-  int timeout;
+	struct sockaddr_in addr_con;
 
-  
+	in_port_t starting_ip;
+	unsigned long starting_ip_long;
+	in_port_t server_port_end;
+	int timeout;
+
+
 
   // Allocate memory for various arrays.
   src_mac = allocate_ustrmem (6);
@@ -135,8 +168,15 @@ main (int argc, char **argv)
 			  strcpy (start_ip_dest, "212.33.204.53");
 			  remove_cr(start_ip_dest);
 			  printf(" start_ip_dest =  %s\n", start_ip_dest);
+			  
+			  struct sockaddr_in server_address;
+			  int numerical_address = inet_pton(AF_INET, start_ip_dest , &starting_ip);
+			  int numerical_address2 = inet_pton(AF_INET, start_ip_dest , &starting_ip_long);
+
+
 //		          starting_ip = atoi(argv[i+1]);
-//     		          printf("server_port_start set to %d\n", starting_ip);
+     		          printf("server_ip_start : %hu\n", starting_ip);
+     		          printf("server_ip_start_long : %lu\n", starting_ip_long);
 			  i++;    // Move to the next flag
 		  }else if (strcmp(argv[i], "-e" ) == 0 || strcmp(argv[i], "--end" ) == 0  )
 		  {

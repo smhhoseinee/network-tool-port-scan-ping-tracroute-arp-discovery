@@ -61,30 +61,103 @@ struct _arp_hdr {
 char *allocate_strmem (int);
 uint8_t *allocate_ustrmem (int);
   
+void remove_cr(char *str){
+        for(int i=0;i<strlen(str); i++){
+                if(str[i] == '\n'){
+                        str[i] = '\0';
+                        return;
+                }
+        }
+}
+
 int
 main (int argc, char **argv)
 {
   int i, status, frame_length, sd, bytes;
-  char *interface, *target, *src_ip;
+  char *interface, *start_ip_dest, *src_ip;
   arp_hdr arphdr;
   uint8_t *src_mac, *dst_mac, *ether_frame;
   struct addrinfo hints, *res;
   struct sockaddr_in *ipv4;
   struct sockaddr_ll device;
   struct ifreq ifr;
+
+  in_port_t starting_ip;
+  in_port_t server_port_end;
+  int timeout;
+
   
+
   // Allocate memory for various arrays.
   src_mac = allocate_ustrmem (6);
   dst_mac = allocate_ustrmem (6);
   ether_frame = allocate_ustrmem (IP_MAXPACKET);
   interface = allocate_strmem (40);
-  target = allocate_strmem (40);
+  start_ip_dest = allocate_strmem (40);
   src_ip = allocate_strmem (INET_ADDRSTRLEN);
-  
+
+
+  if(argc < 2){
+	  printf("\nFormat %s <address> <options>\n", argv[0]);
+	  printf("use -h to see more \n");
+	  return 0;
+  }
+
+
+
+  if (strcmp(argv[1], "-h" ) == 0 || strcmp(argv[1], "--help" ) == 0  )
+  {
+	  printf(" -m or --maxtry : MAX TRY\n");
+	  printf(" -b or --bttl: beginning ttl value\n");
+	  printf(" -f or --fttl: final ttl value\n");
+	  printf(" -p or --port: sending port number\n");
+	  printf(" -t or --timeout: timeout(maximum waiting time)\n");
+	  printf(" -s or --size: size of each packet\n");
+	  return 0;
+  }
+
+
+  if(argc < 3){
+	  printf("\nFormat %s <address> <options>\n", argv[0]);
+	  printf("use -h to see more \n");
+	  return 0;
+  }
+
+  for(int i=1; i<argc; i++){
+
+	  printf("\n\ni=%d\n",i);
+	  printf("argv%d=%s\n",i,argv[i]);
+
+	  if (i+1 != argc)
+	  {
+		  if (strcmp(argv[i], "-s") == 0 ||strcmp(argv[i], "--start") == 0  ) // This is your param  et  er name
+		  {
+			  strcpy (start_ip_dest, "212.33.204.53");
+			  remove_cr(start_ip_dest);
+			  printf(" start_ip_dest =  %s\n", start_ip_dest);
+//		          starting_ip = atoi(argv[i+1]);
+//     		          printf("server_port_start set to %d\n", starting_ip);
+			  i++;    // Move to the next flag
+		  }else if (strcmp(argv[i], "-e" ) == 0 || strcmp(argv[i], "--end" ) == 0  )
+		  {
+			  server_port_end = atoi(argv[i+1]);
+			  printf("server_port_end set %d\n", server_port_end);
+			  i++;    // Move to the next flag
+		  }else if (strcmp(argv[i], "-t" ) == 0 || strcmp(argv[i], "--ttl" ) == 0  )
+		  {
+			  timeout = atoi(argv[i+1]);
+			  printf("timeout set to %d\n", timeout);
+			  i++;    // Move to the next flag
+		  }
+
+
+	  }
+  }
+
   // Interface to send packet through.
   //strcpy (interface, "wlan0");
   strcpy (interface, "ens160");
-  
+
   // Submit request for a socket descriptor to look up interface.
   if ((sd = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
     perror ("socket() failed to get socket descriptor for using ioctl() ");
@@ -127,8 +200,8 @@ main (int argc, char **argv)
   strcpy (src_ip, "212.33.204.63");
   
   // Destination URL or IPv4 address (must be a link-local node): you need to fill this out
-//  strcpy (target, "192.168.0.1");
-  strcpy (target, "212.33.204.53");
+//  strcpy (start_ip_dest, "192.168.0.1");
+//  strcpy (start_ip_dest, "212.33.204.53");
   
   // Fill out hints for getaddrinfo().
   memset (&hints, 0, sizeof (struct addrinfo));
@@ -142,8 +215,8 @@ main (int argc, char **argv)
     exit (EXIT_FAILURE);
   }
   
-  // Resolve target using getaddrinfo().
-  if ((status = getaddrinfo (target, NULL, &hints, &res)) != 0) {
+  // Resolve start_ip_dest using getaddrinfo().
+  if ((status = getaddrinfo (start_ip_dest, NULL, &hints, &res)) != 0) {
     fprintf (stderr, "getaddrinfo() failed: %s\n", gai_strerror (status));
     exit (EXIT_FAILURE);
   }
@@ -184,7 +257,7 @@ main (int argc, char **argv)
   memset (&arphdr.target_mac, 0, 6 * sizeof (uint8_t));
   
   // Target protocol address (32 bits)
-  // See getaddrinfo() resolution of target.
+  // See getaddrinfo() resolution of start_ip_dest.
   
   // Fill out ethernet frame header.
   
@@ -226,7 +299,7 @@ main (int argc, char **argv)
   free (dst_mac);
   free (ether_frame);
   free (interface);
-  free (target);
+  free (start_ip_dest);
   free (src_ip);
 
   printf ("Exit Succesful");

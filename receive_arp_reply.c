@@ -46,7 +46,7 @@ struct _arp_hdr {
 };
   
 // Define some constants.
-#define ARPOP_REPLY 2         // Taken from &lt;linux/if_arp.h&gt;
+#define ARPOP_REPLY 2         // Taken from <linux/if_arp.h>
   
 // Function prototypes
 uint8_t *allocate_ustrmem (int);
@@ -62,7 +62,8 @@ main (int argc, char **argv)
   ether_frame = allocate_ustrmem (IP_MAXPACKET);
   
   // Submit request for a raw socket descriptor.
-  if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) &lt; 0) {
+ // if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) &lt; 0) {
+  if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0) {
     perror ("socket() failed ");
     exit (EXIT_FAILURE);
   }
@@ -89,33 +90,34 @@ main (int argc, char **argv)
   // Print out contents of received ethernet frame.
   printf ("\nEthernet frame header:\n");
   printf ("Destination MAC (this node): ");
-  for (i=0; i&lt;5; i++) {
+ // for (i=0; i&lt;5; i++) {
+  for (i=0; i<5; i++) {
     printf ("%02x:", ether_frame[i]);
   }
   printf ("%02x\n", ether_frame[5]);
   printf ("Source MAC: ");
-  for (i=0; i&lt;5; i++) {
+  for (i=0; i<5; i++) {
     printf ("%02x:", ether_frame[i+6]);
   }
   printf ("%02x\n", ether_frame[11]);
   // Next is ethernet type code (ETH_P_ARP for ARP).
   // http://www.iana.org/assignments/ethernet-numbers
-  printf ("Ethernet type code (2054 = ARP): %u\n", ((ether_frame[12]) &lt;&lt; 8) + ether_frame[13]);
+  printf ("Ethernet type code (2054 = ARP): %u\n", ((ether_frame[12]) << 8) + ether_frame[13]);
   printf ("\nEthernet data (ARP header):\n");
-  printf ("Hardware type (1 = ethernet (10 Mb)): %u\n", ntohs (arphdr-&gt;htype));
-  printf ("Protocol type (2048 for IPv4 addresses): %u\n", ntohs (arphdr-&gt;ptype));
-  printf ("Hardware (MAC) address length (bytes): %u\n", arphdr-&gt;hlen);
-  printf ("Protocol (IPv4) address length (bytes): %u\n", arphdr-&gt;plen);
-  printf ("Opcode (2 = ARP reply): %u\n", ntohs (arphdr-&gt;opcode));
+  printf ("Hardware type (1 = ethernet (10 Mb)): %u\n", ntohs (arphdr-> htype));
+  printf ("Protocol type (2048 for IPv4 addresses): %u\n", ntohs (arphdr-> ptype));
+  printf ("Hardware (MAC) address length (bytes): %u\n", arphdr-> hlen);
+  printf ("Protocol (IPv4) address length (bytes): %u\n", arphdr->plen);
+  printf ("Opcode (2 = ARP reply): %u\n", ntohs (arphdr->opcode));
   printf ("Sender hardware (MAC) address: ");
   for (i=0; i<5; i++) {
     printf ("%02x:", arphdr->sender_mac[i]);
   }
-  printf ("%02x\n", arphdr-&gt;sender_mac[5]);
+  printf ("%02x\n", arphdr->sender_mac[5]);
   printf ("Sender protocol (IPv4) address: %u.%u.%u.%u\n",
     arphdr->sender_ip[0], arphdr->sender_ip[1], arphdr->sender_ip[2], arphdr->sender_ip[3]);
   printf ("Target (this node) hardware (MAC) address: ");
-  for (i=0; i&lt;5; i++) {
+  for (i=0; i<5; i++) {
     printf ("%02x:", arphdr->target_mac[i]);
   }
   printf ("%02x\n", arphdr->target_mac[5]);
@@ -133,7 +135,7 @@ allocate_ustrmem (int len)
 {
   void *tmp;
   
-  if (len &lt;= 0) {
+  if (len <= 0) {
     fprintf (stderr, "ERROR: Cannot allocate memory because len = %i in allocate_ustrmem().\n", len);
     exit (EXIT_FAILURE);
   }
@@ -147,4 +149,3 @@ allocate_ustrmem (int len)
     exit (EXIT_FAILURE);
   }
 }
-

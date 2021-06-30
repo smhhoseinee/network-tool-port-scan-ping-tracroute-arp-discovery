@@ -387,10 +387,10 @@ int main (int argc, char **argv)
 		printf("last_byte_iterator = %s\n",last_byte_iterator);
 		printf("ip_str_iterator= %s\n",ip_str_iterator);
 		printf("first_3_bytes= %s\n",first_3_bytes);
-	}
-	return 0;
+//	}
 		// Resolve start_ip_str using getaddrinfo().
-		if ((status = getaddrinfo (start_ip_str, NULL, &hints, &res)) != 0) {
+	//	if ((status = getaddrinfo (start_ip_str, NULL, &hints, &res)) != 0) {
+		if ((status = getaddrinfo (ip_str_iterator, NULL, &hints, &res)) != 0) {
 			fprintf (stderr, "getaddrinfo() failed: %s\n", gai_strerror (status));
 			exit (EXIT_FAILURE);
 		}
@@ -464,7 +464,7 @@ int main (int argc, char **argv)
 			perror ("sendto() failed");
 			exit (EXIT_FAILURE);
 		}
-	//}
+	}
 	// Close socket descriptor.
 	close (sd);
 
@@ -474,6 +474,10 @@ int main (int argc, char **argv)
 	free (ether_frame);
 	free (interface);
 	free (start_ip_str);
+	free (end_ip_str);
+	free (first_3_bytes);
+	free (ip_str_iterator);
+	free (last_byte_iterator);
 	free (src_ip);
 
 	printf ("Exit Succesful");

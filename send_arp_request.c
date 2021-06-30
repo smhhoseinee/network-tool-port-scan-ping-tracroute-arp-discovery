@@ -1,27 +1,27 @@
 /*  Copyright (C) 2011-2015  P.D. Buchan (pdbuchan@yahoo.com)
-  
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-  
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-  
+
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
-*/
-  
+    */
+
 // Send an IPv4 ARP packet via raw socket at the link layer (ethernet frame).
 // Values set for ARP request.
-  
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>           // close()
 #include <string.h>           // strcpy, memset(), and memcpy()
-  
+
 #include <netdb.h>            // struct addrinfo
 #include <sys/types.h>        // needed for socket(), uint8_t, uint16_t
 #include <sys/socket.h>       // needed for socket()
@@ -90,63 +90,63 @@ void remove_cr(char *str){
 }
 
 struct sockaddr_in create_struct_sockaddr(struct sockaddr_in server_address, char *server_addr_str, in_port_t server_port){
-        //create struct sockaddr
-        memset(&server_address,0,sizeof(server_address));
-        server_address.sin_family = AF_INET;
-        int numerical_address = inet_pton(AF_INET,server_addr_str, &server_address.sin_addr.s_addr);
+	//create struct sockaddr
+	memset(&server_address,0,sizeof(server_address));
+	server_address.sin_family = AF_INET;
+	int numerical_address = inet_pton(AF_INET,server_addr_str, &server_address.sin_addr.s_addr);
 
-        if(numerical_address == 0){
-                fputs("invalid IPv4", stderr);
-                exit(EXIT_FAILURE);
-        }
-        if(numerical_address < 0){
-                fputs("p to n failed",stderr);
-                exit(EXIT_FAILURE);
-        }
-        server_address.sin_port = htons(server_port);
+	if(numerical_address == 0){
+		fputs("invalid IPv4", stderr);
+		exit(EXIT_FAILURE);
+	}
+	if(numerical_address < 0){
+		fputs("p to n failed",stderr);
+		exit(EXIT_FAILURE);
+	}
+	server_address.sin_port = htons(server_port);
 
-        return server_address;
+	return server_address;
 }
 
 unsigned short htons ( unsigned short us )
 {
-    return ( ((unsigned char*)&us)[0] << 8 ) + ((unsigned char*)&us)[1];
+	return ( ((unsigned char*)&us)[0] << 8 ) + ((unsigned char*)&us)[1];
 }
 
 void dumpbin ( unsigned char* pbyBin, int nLen )
 {
-    int i;
-    for ( i = 0; i < nLen; ++i )
-    {
-        printf ( "%02x", pbyBin[i] );
-    }
+	int i;
+	for ( i = 0; i < nLen; ++i )
+	{
+		printf ( "%02x", pbyBin[i] );
+	}
 }
 
 
 void testcase ( const char* pszTest )
 {
-    unsigned char abyAddr[16];
-    int bIsIPv6;
-    int nPort;
-    int bSuccess;
+	unsigned char abyAddr[16];
+	int bIsIPv6;
+	int nPort;
+	int bSuccess;
 
-    printf ( "Test case '%s'\n", pszTest );
-    const char* pszTextCursor = pszTest;
-    bSuccess = ParseIPv4OrIPv6 ( &pszTextCursor, abyAddr, &nPort, &bIsIPv6 );
-    if ( ! bSuccess )
-    {
-        printf ( "parse failed, at about index %ld ; rest: '%s'\n", pszTextCursor - pszTest, pszTextCursor );
-        return;
-    }
+	printf ( "Test case '%s'\n", pszTest );
+	const char* pszTextCursor = pszTest;
+	bSuccess = ParseIPv4OrIPv6 ( &pszTextCursor, abyAddr, &nPort, &bIsIPv6 );
+	if ( ! bSuccess )
+	{
+		printf ( "parse failed, at about index %ld ; rest: '%s'\n", pszTextCursor - pszTest, pszTextCursor );
+		return;
+	}
 
-    printf ( "addr:  " );
-    dumpbin ( abyAddr, bIsIPv6 ? 16 : 4 );
-    printf ( "\n" );
-    if ( 0 == nPort )
-        printf ( "port absent" );
-    else
-        printf ( "port:  %d", htons ( nPort ) );
-    printf ( "\n\n" );
+	printf ( "addr:  " );
+	dumpbin ( abyAddr, bIsIPv6 ? 16 : 4 );
+	printf ( "\n" );
+	if ( 0 == nPort )
+		printf ( "port absent" );
+	else
+		printf ( "port:  %d", htons ( nPort ) );
+	printf ( "\n\n" );
 
 }
 
@@ -168,7 +168,7 @@ int main (int argc, char **argv)
 	in_port_t start_ip_addr;
 	in_port_t end_ip_addr;
 	unsigned long starting_ip_long;
-	int timeout;
+	int timeout_value = 3;
 	int start_last_byte;
 	int end_last_byte;
 
@@ -188,9 +188,9 @@ int main (int argc, char **argv)
 
 
 	for(i=0;i<9;i++){
-	  printf("%d",i);
+		printf("%d",i);
 	}
-//	return 0;
+	//	return 0;
 
 
 	if(argc < 2){
@@ -203,12 +203,9 @@ int main (int argc, char **argv)
 
 	if (strcmp(argv[1], "-h" ) == 0 || strcmp(argv[1], "--help" ) == 0  )
 	{
-		printf(" -m or --maxtry : MAX TRY\n");
-		printf(" -b or --bttl: beginning ttl value\n");
-		printf(" -f or --fttl: final ttl value\n");
-		printf(" -p or --port: sending port number\n");
-		printf(" -t or --timeout: timeout(maximum waiting time)\n");
-		printf(" -s or --size: size of each packet\n");
+		printf(" -t or --timeout_value: timeout_value(maximum waiting time)\n");
+		printf(" -s or --start: start ip address\n");
+		printf(" -e or --end: end ip address\n");
 		return 0;
 	}
 
@@ -238,15 +235,15 @@ int main (int argc, char **argv)
 				int numerical_address = inet_pton(AF_INET, start_ip_str , &start_ip_addr);
 				//int numerical_address2 = inet_pton(AF_INET, start_ip_str , &starting_ip_long);
 
-		//		printf("server_ip_start : %hu\n", start_ip_addr);
-		//		printf("server_ip_start_long : %lu\n", starting_ip_long);
+				//		printf("server_ip_start : %hu\n", start_ip_addr);
+				//		printf("server_ip_start_long : %lu\n", starting_ip_long);
 
 				printf("before i++  --- \n");
 				printf("i=%d\n",i);
 				i++;    // Move to the next flag
 				printf("after i++  --- \n");
 				printf("i=%d\n",i);
-			
+
 			}else if (strcmp(argv[i], "-e" ) == 0 || strcmp(argv[i], "--end" ) == 0  )
 			{
 
@@ -258,10 +255,10 @@ int main (int argc, char **argv)
 				int numerical_address = inet_pton(AF_INET, end_ip_str , &end_ip_addr);
 
 				i++;    // Move to the next flag
-			}else if (strcmp(argv[i], "-t" ) == 0 || strcmp(argv[i], "--timeout" ) == 0  )
+			}else if (strcmp(argv[i], "-t" ) == 0 || strcmp(argv[i], "--timeout_value" ) == 0  )
 			{
-				timeout = atoi(argv[i+1]);
-				printf("timeout set to %d\n", timeout);
+				timeout_value = atoi(argv[i+1]);
+				printf("timeout_value set to %d\n", timeout_value);
 				i++;    // Move to the next flag
 			}
 
@@ -270,7 +267,7 @@ int main (int argc, char **argv)
 
 		printf("after if --- \n");
 		printf("i=%d\n",i);
-	//	printf("argv%d=%s\n",i,argv[i]);
+		//	printf("argv%d=%s\n",i,argv[i]);
 
 
 
@@ -303,12 +300,12 @@ int main (int argc, char **argv)
 
 	start_last_byte = atoi(start_last_byte_str);
 
-        // Extract the second token
-        printf( "end_ip_str=%s",end_ip_str); //printing each token
+	// Extract the second token
+	printf( "end_ip_str=%s",end_ip_str); //printing each token
 	char * end_token = strtok(end_ip_str , ".");
 	char* end_last_byte_str;
 	// loop through the string to extract all other tokens
-	
+
 	j = 0;
 	while( end_token != NULL ) {
 		bytes_of_end_ip[j]=atoi(end_token);
@@ -367,7 +364,7 @@ int main (int argc, char **argv)
 	memset (dst_mac, 0xff, 6 * sizeof (uint8_t));
 
 
-	
+
 	// Source IPv4 address:  you need to fill this out
 	//  strcpy (src_ip, "192.168.0.106");
 	strcpy (src_ip, "212.33.204.63");
@@ -399,13 +396,13 @@ int main (int argc, char **argv)
 		strncat(ip_str_iterator, last_byte_iterator, 3);
 
 		printf("ip_str_iterator= %s\n",ip_str_iterator);
-	//	ip_str_iterator = strcat(first_3_bytes, last_byte_iterator);
+		//	ip_str_iterator = strcat(first_3_bytes, last_byte_iterator);
 		printf("last_byte_iterator = %s\n",last_byte_iterator);
 		printf("ip_str_iterator= %s\n",ip_str_iterator);
 		printf("first_3_bytes= %s\n",first_3_bytes);
-//	}
+		//	}
 		// Resolve start_ip_str using getaddrinfo().
-	//	if ((status = getaddrinfo (start_ip_str, NULL, &hints, &res)) != 0) {
+		//	if ((status = getaddrinfo (start_ip_str, NULL, &hints, &res)) != 0) {
 		if ((status = getaddrinfo (ip_str_iterator, NULL, &hints, &res)) != 0) {
 			fprintf (stderr, "getaddrinfo() failed: %s\n", gai_strerror (status));
 			exit (EXIT_FAILURE);
@@ -487,185 +484,214 @@ int main (int argc, char **argv)
 		//receiving 
 		//
 		//
-	
-        int i, sd, status;
-        uint8_t *ether_frame;
-        arp_hdr *arphdr;
 
-        bool waiting = true;
-        bool last_bytes[256];
-	int  counter=0;
+		int i, sd, status;
+		uint8_t *ether_frame;
+		arp_hdr *arphdr;
 
-	char* received_ip_str ;
+		bool waiting = true;
+		bool last_bytes[256];
+		int  counter=0;
 
-	received_ip_str = allocate_strmem (40);
+		char *received_ip_str , *received_last_byte_str;
 
-        for(int i = 0; i < 256; i++){
-                last_bytes[i] = false;
-        }
+		received_ip_str = allocate_strmem (40);
+		received_last_byte_str = allocate_strmem (40);
 
-	for(i = start_last_byte; i <= end_last_byte && i<=255; i++){
-                last_bytes[i] = true;
-		counter++;
-	}
+		for(int i = 0; i < 256; i++){
+			last_bytes[i] = false;
+		}
 
-        // Allocate memory for various arrays.
-        ether_frame = allocate_ustrmem (IP_MAXPACKET);
+		for(i = start_last_byte; i <= end_last_byte && i<=255; i++){
+			last_bytes[i] = true;
+			counter++;
+		}
 
-        // Submit request for a raw socket descriptor.
-        // if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) &lt; 0) {
-        if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0) {
-                perror ("socket() failed ");
-                exit (EXIT_FAILURE);
-        }
+		// Allocate memory for various arrays.
+		ether_frame = allocate_ustrmem (IP_MAXPACKET);
 
-        // Listen for incoming ethernet frame from socket sd.
-        // We expect an ARP ethernet frame of the form:
-        //     MAC (6 bytes) + MAC (6 bytes) + ethernet type (2 bytes)
-        //     + ethernet data (ARP header) (28 bytes)
-        // Keep at it until we get an ARP reply.
-        arphdr = (arp_hdr *) (ether_frame + 6 + 6 + 2);
+		// Submit request for a raw socket descriptor.
+		// if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) &lt; 0) {
+		if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0) {
+			perror ("socket() failed ");
+			exit (EXIT_FAILURE);
+		}
+		//	int ReceiveTimeout = 3000;
+		//	int e = setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (char*)&ReceiveTimeout, sizeof(int));
+
+		struct timeval timeout;      
+		timeout.tv_sec = timeout_value;
+		timeout.tv_usec = 0;
+
+		if (setsockopt (sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0){
+			perror("setsockopt failed\n");
+		}else{
+			printf ("\ntime out for setsockopt() set %d successfully\n",timeout_value);
+		}
+
+		//	if (e < 0) {
+		//                perror ("setsockopt() failed ");
+		//                exit (EXIT_FAILURE);
+		//        }
+
+
+		// Listen for incoming ethernet frame from socket sd.
+		// We expect an ARP ethernet frame of the form:
+		//     MAC (6 bytes) + MAC (6 bytes) + ethernet type (2 bytes)
+		//     + ethernet data (ARP header) (28 bytes)
+		// Keep at it until we get an ARP reply.
+		arphdr = (arp_hdr *) (ether_frame + 6 + 6 + 2);
 
 
 
-        while(waiting){
-                while (((((ether_frame[12]) << 8) + ether_frame[13]) != ETH_P_ARP) || (ntohs (arphdr->opcode) != ARPOP_REPLY)) {
-                        if ((status = recv (sd, ether_frame, IP_MAXPACKET, 0)) < 0) {
-                                if (errno == EINTR) {
-                                        memset (ether_frame, 0, IP_MAXPACKET * sizeof (uint8_t));
-                                        continue;  // Something weird happened, but let's try again.
-                                } else {
-                                        perror ("recv() failed:");
-                                        exit (EXIT_FAILURE);
-                                }
-                        }
-                }
-                close (sd);
-
-	//	utoa (arphdr->opcode,received_ip_str, 10);
-                printf ("Sender protocol (IPv4) address: %u.%u.%u.%u\n",
-                                arphdr->sender_ip[0], arphdr->sender_ip[1], arphdr->sender_ip[2], arphdr->sender_ip[3]);
-		if(last_bytes[arphdr->sender_ip[3]] == true ){
-			last_bytes[arphdr->sender_ip[3]] = false;
-			counter--;
-			if(counter <= 0){
-				printf ("\nfinished with %u :\n",arphdr->sender_ip[3] );
-				waiting = false;
+		while(waiting){
+			memset (ether_frame, 0, IP_MAXPACKET * sizeof (uint8_t));
+			while (((((ether_frame[12]) << 8) + ether_frame[13]) != ETH_P_ARP) || (ntohs (arphdr->opcode) != ARPOP_REPLY)) {
+				if ((status = recv (sd, ether_frame, IP_MAXPACKET, 0)) < 0) {
+					if (errno == EINTR) {
+						memset (ether_frame, 0, IP_MAXPACKET * sizeof (uint8_t));
+						continue;  // Something weird happened, but let's try again.
+					} else {
+						perror ("recv() failed:");
+						exit (EXIT_FAILURE);
+					}
+				}
 			}
-		}
+	//		close (sd);
+
+			//	utoa (arphdr->opcode,received_ip_str, 10);
+			if(last_bytes[arphdr->sender_ip[3]] == true ){
+
+				printf ("Sender protocol (IPv4) address: %u.%u.%u.%u\n",
+						arphdr->sender_ip[0], arphdr->sender_ip[1], arphdr->sender_ip[2], arphdr->sender_ip[3]);
 
 
-		if(received_ip_str){
-		}
 
-                // Print out contents of received ethernet frame.
-                printf ("\nEthernet frame header:\n");
-                printf ("Destination MAC (this node): ");
-                // for (i=0; i&lt;5; i++) {
-                for (i=0; i<5; i++) {
-                        printf ("%02x:", ether_frame[i]);
-                }
-                printf ("%02x\n", ether_frame[5]);
-                printf ("Source MAC: ");
-                for (i=0; i<5; i++) {
-                        printf ("%02x:", ether_frame[i+6]);
-                }
-//                printf ("%02x\n", ether_frame[11]);
-//                // Next is ethernet type code (ETH_P_ARP for ARP).
-//                // http://www.iana.org/assignments/ethernet-numbers
-//                printf ("Ethernet type code (2054 = ARP): %u\n", ((ether_frame[12]) << 8) + ether_frame[13]);
-//                printf ("\nEthernet data (ARP header):\n");
-//                printf ("Hardware type (1 = ethernet (10 Mb)): %u\n", ntohs (arphdr-> htype));
-//                printf ("Protocol type (2048 for IPv4 addresses): %u\n", ntohs (arphdr-> ptype));
-//                printf ("Hardware (MAC) address length (bytes): %u\n", arphdr-> hlen);
-//                printf ("Protocol (IPv4) address length (bytes): %u\n", arphdr->plen);
-//                printf ("Opcode (2 = ARP reply): %u\n", ntohs (arphdr->opcode));
-//                printf ("Sender hardware (MAC) address: ");
-//                for (i=0; i<5; i++) {
-//                        printf ("%02x:", arphdr->sender_mac[i]);
-//                }
-//                printf ("%02x\n", arphdr->sender_mac[5]);
-                printf ("Sender protocol (IPv4) address: %u.%u.%u.%u\n",
-                                arphdr->sender_ip[0], arphdr->sender_ip[1], arphdr->sender_ip[2], arphdr->sender_ip[3]);
-                printf ("Target (this node) hardware (MAC) address: ");
-                for (i=0; i<5; i++) {
-                        printf ("%02x:", arphdr->target_mac[i]);
-                }
-                printf ("%02x\n", arphdr->target_mac[5]);
-                printf ("Target (this node) protocol (IPv4) address: %u.%u.%u.%u\n",
-                                arphdr->target_ip[0], arphdr->target_ip[1], arphdr->target_ip[2], arphdr->target_ip[3]);
-       }
-        free (ether_frame);
+				strcpy(received_ip_str,first_3_bytes);
+				sprintf(received_last_byte_str, "%d", arphdr->sender_ip[3]);
+				strcat(received_ip_str, received_last_byte_str);
 
 
-	}
+				printf ("\n ip  %s is up :\n",received_ip_str );
 
+				last_bytes[arphdr->sender_ip[3]] = false;
+				counter--;
+				if(counter <= 0){
+					printf ("\nfinished with %u :\n",arphdr->sender_ip[3] );
+					waiting = false;
+				}
+				// Print out contents of received ethernet frame.
+				printf ("\nEthernet frame header:\n");
+				printf ("Destination MAC (this node): ");
+				for (i=0; i<5; i++) {
+					printf ("%02x:", ether_frame[i]);
+				}
+				printf ("%02x\n", ether_frame[5]);
+				printf ("Source MAC: ");
+				for (i=0; i<5; i++) {
+					printf ("%02x:", ether_frame[i+6]);
+				}
+				//                printf ("%02x\n", ether_frame[11]);
+				//                // Next is ethernet type code (ETH_P_ARP for ARP).
+				//                // http://www.iana.org/assignments/ethernet-numbers
+				//                printf ("Ethernet type code (2054 = ARP): %u\n", ((ether_frame[12]) << 8) + ether_frame[13]);
+				//                printf ("\nEthernet data (ARP header):\n");
+				//                printf ("Hardware type (1 = ethernet (10 Mb)): %u\n", ntohs (arphdr-> htype));
+				//                printf ("Protocol type (2048 for IPv4 addresses): %u\n", ntohs (arphdr-> ptype));
+				//                printf ("Hardware (MAC) address length (bytes): %u\n", arphdr-> hlen);
+				//                printf ("Protocol (IPv4) address length (bytes): %u\n", arphdr->plen);
+				//                printf ("Opcode (2 = ARP reply): %u\n", ntohs (arphdr->opcode));
+				//                printf ("Sender hardware (MAC) address: ");
+				//                for (i=0; i<5; i++) {
+				//                        printf ("%02x:", arphdr->sender_mac[i]);
+				//                }
+				//                printf ("%02x\n", arphdr->sender_mac[5]);
+				printf ("Sender protocol (IPv4) address: %u.%u.%u.%u\n",
+						arphdr->sender_ip[0], arphdr->sender_ip[1], arphdr->sender_ip[2], arphdr->sender_ip[3]);
+				printf ("Target (this node) hardware (MAC) address: ");
+				for (i=0; i<5; i++) {
+					printf ("%02x:", arphdr->target_mac[i]);
+				}
+				printf ("%02x\n", arphdr->target_mac[5]);
+				printf ("Target (this node) protocol (IPv4) address: %u.%u.%u.%u\n",
+						arphdr->target_ip[0], arphdr->target_ip[1], arphdr->target_ip[2], arphdr->target_ip[3]);
 
-	//
-	//
-	//end of receiving
-	//
-	//
+			}
 	
+		}
 
-	// Close socket descriptor.
-	close (sd);
+		close (sd);
+		free (ether_frame);
 
-	// Free allocated memory.
-	free (src_mac);
-	free (dst_mac);
-	free (ether_frame);
-	free (interface);
-	free (start_ip_str);
-	free (end_ip_str);
-	free (first_3_bytes);
-	free (ip_str_iterator);
-	free (last_byte_iterator);
-	free (src_ip);
 
-	printf ("Exit Succesful");
+		}
 
-	return (EXIT_SUCCESS);
+
+		//
+		//
+		//end of receiving
+		//
+		//
+
+
+		// Close socket descriptor.
+		close (sd);
+
+		// Free allocated memory.
+		free (src_mac);
+		free (dst_mac);
+		free (ether_frame);
+		free (interface);
+		free (start_ip_str);
+		free (end_ip_str);
+		free (first_3_bytes);
+		free (ip_str_iterator);
+		free (last_byte_iterator);
+		free (src_ip);
+
+		printf ("Exit Succesful");
+
+		return (EXIT_SUCCESS);
 }
-  
+
 // Allocate memory for an array of chars.
-char *
+	char *
 allocate_strmem (int len)
 {
-  void *tmp;
-  
-  if (len <= 0) {
-    fprintf (stderr, "ERROR: Cannot allocate memory because len = %i in allocate_strmem().\n", len);
-    exit (EXIT_FAILURE);
-  }
-  
-  tmp = (char *) malloc (len * sizeof (char));
-  if (tmp != NULL) {
-    memset (tmp, 0, len * sizeof (char));
-    return (tmp);
-  } else {
-    fprintf (stderr, "ERROR: Cannot allocate memory for array allocate_strmem().\n");
-    exit (EXIT_FAILURE);
-  }
+	void *tmp;
+
+	if (len <= 0) {
+		fprintf (stderr, "ERROR: Cannot allocate memory because len = %i in allocate_strmem().\n", len);
+		exit (EXIT_FAILURE);
+	}
+
+	tmp = (char *) malloc (len * sizeof (char));
+	if (tmp != NULL) {
+		memset (tmp, 0, len * sizeof (char));
+		return (tmp);
+	} else {
+		fprintf (stderr, "ERROR: Cannot allocate memory for array allocate_strmem().\n");
+		exit (EXIT_FAILURE);
+	}
 }
-  
+
 // Allocate memory for an array of unsigned chars.
-uint8_t *
+	uint8_t *
 allocate_ustrmem (int len)
 {
-  void *tmp;
-  
-  if (len <= 0) {
-    fprintf (stderr, "ERROR: Cannot allocate memory because len = %i in allocate_ustrmem().\n", len);
-    exit (EXIT_FAILURE);
-  }
-  
-  tmp = (uint8_t *) malloc (len * sizeof (uint8_t));
-  if (tmp != NULL) {
-    memset (tmp, 0, len * sizeof (uint8_t));
-    return (tmp);
-  } else {
-    fprintf (stderr, "ERROR: Cannot allocate memory for array allocate_ustrmem().\n");
-    exit (EXIT_FAILURE);
-  }
+	void *tmp;
+
+	if (len <= 0) {
+		fprintf (stderr, "ERROR: Cannot allocate memory because len = %i in allocate_ustrmem().\n", len);
+		exit (EXIT_FAILURE);
+	}
+
+	tmp = (uint8_t *) malloc (len * sizeof (uint8_t));
+	if (tmp != NULL) {
+		memset (tmp, 0, len * sizeof (uint8_t));
+		return (tmp);
+	} else {
+		fprintf (stderr, "ERROR: Cannot allocate memory for array allocate_ustrmem().\n");
+		exit (EXIT_FAILURE);
+	}
 }

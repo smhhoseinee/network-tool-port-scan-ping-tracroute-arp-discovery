@@ -69,6 +69,13 @@ struct _arp_hdr {
 #define ARP_HDRLEN 28      // ARP header length
 #define ARPOP_REQUEST 1    // Taken from &lt;linux/if_arp.h&gt;
 
+#define _OPEN_SYS_ITOA_EXT
+
+//rec part
+#define ARPOP_REPLY 2         // Taken from <linux/if_arp.h>
+
+
+
 // Function prototypes
 char *allocate_strmem (int);
 uint8_t *allocate_ustrmem (int);
@@ -273,8 +280,13 @@ int main (int argc, char **argv)
 	char * token = strtok(start_ip_str , ".");
 	char* start_last_byte_str;
 	int byte_counter = 0;
+	int bytes_of_start_ip[4];
+	int bytes_of_end_ip[4];
+	int j = 0;
 	// loop through the string to extract all other tokens
 	while( token != NULL ) {
+		bytes_of_start_ip[j]=atoi(token);
+		j++;
 		if(byte_counter < 3){
 			first_3_bytes = strcat(first_3_bytes,token);
 			first_3_bytes = strcat(first_3_bytes,".");
@@ -288,6 +300,7 @@ int main (int argc, char **argv)
 	printf( " first_3_bytes %s\n",  first_3_bytes); //printing each token
 	printf( "start_lastByte %s\n", start_last_byte_str); //printing each token
 
+
 	start_last_byte = atoi(start_last_byte_str);
 
         // Extract the second token
@@ -296,8 +309,10 @@ int main (int argc, char **argv)
 	char* end_last_byte_str;
 	// loop through the string to extract all other tokens
 	
-        printf( "end1"); //printing each token
+	j = 0;
 	while( end_token != NULL ) {
+		bytes_of_end_ip[j]=atoi(end_token);
+		j++;
 		end_last_byte_str = end_token;
 		printf( "token  %s\n", end_token ); //printing each token
 		end_token = strtok(NULL, ".");
@@ -374,6 +389,7 @@ int main (int argc, char **argv)
 	}
 
 	for(i = start_last_byte; i <= end_last_byte; i++){
+
 
 
 		sprintf(last_byte_iterator, "%d", i);
@@ -464,7 +480,134 @@ int main (int argc, char **argv)
 			perror ("sendto() failed");
 			exit (EXIT_FAILURE);
 		}
+
+
+		//
+		//
+		//receiving 
+		//
+		//
+	
+        int i, sd, status;
+        uint8_t *ether_frame;
+        arp_hdr *arphdr;
+
+        bool waiting = true;
+        bool last_bytes[256];
+	int  counter=0;
+
+	char* received_ip_str ;
+
+	received_ip_str = allocate_strmem (40);
+
+        for(int i = 0; i < 256; i++){
+                last_bytes[i] = false;
+        }
+
+	for(i = start_last_byte; i <= end_last_byte && i<=255; i++){
+                last_bytes[i] = true;
+		counter++;
 	}
+
+        // Allocate memory for various arrays.
+        ether_frame = allocate_ustrmem (IP_MAXPACKET);
+
+        // Submit request for a raw socket descriptor.
+        // if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) &lt; 0) {
+        if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0) {
+                perror ("socket() failed ");
+                exit (EXIT_FAILURE);
+        }
+
+        // Listen for incoming ethernet frame from socket sd.
+        // We expect an ARP ethernet frame of the form:
+        //     MAC (6 bytes) + MAC (6 bytes) + ethernet type (2 bytes)
+        //     + ethernet data (ARP header) (28 bytes)
+        // Keep at it until we get an ARP reply.
+        arphdr = (arp_hdr *) (ether_frame + 6 + 6 + 2);
+
+
+
+        while(waiting){
+                while (((((ether_frame[12]) << 8) + ether_frame[13]) != ETH_P_ARP) || (ntohs (arphdr->opcode) != ARPOP_REPLY)) {
+                        if ((status = recv (sd, ether_frame, IP_MAXPACKET, 0)) < 0) {
+                                if (errno == EINTR) {
+                                        memset (ether_frame, 0, IP_MAXPACKET * sizeof (uint8_t));
+                                        continue;  // Something weird happened, but let's try again.
+                                } else {
+                                        perror ("recv() failed:");
+                                        exit (EXIT_FAILURE);
+                                }
+                        }
+                }
+                close (sd);
+
+	//	utoa (arphdr->opcode,received_ip_str, 10);
+                printf ("Sender protocol (IPv4) address: %u.%u.%u.%u\n",
+                                arphdr->sender_ip[0], arphdr->sender_ip[1], arphdr->sender_ip[2], arphdr->sender_ip[3]);
+		if(last_bytes[arphdr->sender_ip[3]] == true ){
+			last_bytes[arphdr->sender_ip[3]] = false;
+			counter--;
+			if(counter <= 0){
+				printf ("\nfinished with %u :\n",arphdr->sender_ip[3] );
+				waiting = false;
+			}
+		}
+
+
+		if(received_ip_str){
+		}
+
+                // Print out contents of received ethernet frame.
+                printf ("\nEthernet frame header:\n");
+                printf ("Destination MAC (this node): ");
+                // for (i=0; i&lt;5; i++) {
+                for (i=0; i<5; i++) {
+                        printf ("%02x:", ether_frame[i]);
+                }
+                printf ("%02x\n", ether_frame[5]);
+                printf ("Source MAC: ");
+                for (i=0; i<5; i++) {
+                        printf ("%02x:", ether_frame[i+6]);
+                }
+//                printf ("%02x\n", ether_frame[11]);
+//                // Next is ethernet type code (ETH_P_ARP for ARP).
+//                // http://www.iana.org/assignments/ethernet-numbers
+//                printf ("Ethernet type code (2054 = ARP): %u\n", ((ether_frame[12]) << 8) + ether_frame[13]);
+//                printf ("\nEthernet data (ARP header):\n");
+//                printf ("Hardware type (1 = ethernet (10 Mb)): %u\n", ntohs (arphdr-> htype));
+//                printf ("Protocol type (2048 for IPv4 addresses): %u\n", ntohs (arphdr-> ptype));
+//                printf ("Hardware (MAC) address length (bytes): %u\n", arphdr-> hlen);
+//                printf ("Protocol (IPv4) address length (bytes): %u\n", arphdr->plen);
+//                printf ("Opcode (2 = ARP reply): %u\n", ntohs (arphdr->opcode));
+//                printf ("Sender hardware (MAC) address: ");
+//                for (i=0; i<5; i++) {
+//                        printf ("%02x:", arphdr->sender_mac[i]);
+//                }
+//                printf ("%02x\n", arphdr->sender_mac[5]);
+                printf ("Sender protocol (IPv4) address: %u.%u.%u.%u\n",
+                                arphdr->sender_ip[0], arphdr->sender_ip[1], arphdr->sender_ip[2], arphdr->sender_ip[3]);
+                printf ("Target (this node) hardware (MAC) address: ");
+                for (i=0; i<5; i++) {
+                        printf ("%02x:", arphdr->target_mac[i]);
+                }
+                printf ("%02x\n", arphdr->target_mac[5]);
+                printf ("Target (this node) protocol (IPv4) address: %u.%u.%u.%u\n",
+                                arphdr->target_ip[0], arphdr->target_ip[1], arphdr->target_ip[2], arphdr->target_ip[3]);
+       }
+        free (ether_frame);
+
+
+	}
+
+
+	//
+	//
+	//end of receiving
+	//
+	//
+	
+
 	// Close socket descriptor.
 	close (sd);
 

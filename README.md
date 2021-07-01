@@ -171,3 +171,45 @@ a complicated example:
 ```
 ./traceroute google.com -s 15  -b 1 -f 64
 ```
+
+
+---
+
+### phase 4 : host discovery using arp
+
+first compile the code   
+
+``` 
+gcc -Wall send_arp_request_1_by_1.c ip_parser.c  -o send_arp_request_1_by_1
+```
+
+you could send arp requests to a range of ip addresses using this tool
+
+```
+./send_arp_request_1_by_1 -s <starting ip> -e <ending(last) ip>
+ ./send_arp_request_1_by_1 -s 212.33.204.120 -e 212.33.204.125 -t 4
+```
+
+to see more just you could use -h 
+
+```
+./send_arp_request_1_by_1 -h
+```
+
+
+
+### flags:
+
+
+``-s , --start`` set starting ip address
+
+``-t , --timeout_value`` set time wait for response (default is 1 second)
+
+``-e , --end `` set end ip address
+
+
+a complete example:
+```
+ ./send_arp_request_1_by_1 -s 192.168.1.10 -e 192.168.1.20 -t 4
+```
+

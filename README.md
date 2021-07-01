@@ -170,6 +170,8 @@ to see more just you could use -h
 a complicated example:
 ```
 ./traceroute google.com -s 15  -b 1 -f 64
+./traceroute google.com -s 15  -b 1 -f 64 -p 4343 -m 5 -t 4
+
 ```
 
 

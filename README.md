@@ -1,4 +1,4 @@
-# computer-network-project
+# Network tool implemented using pure web socket library in C which could do the following: 1-port scan 2-ping 3-traceroute 4-host discovery using arp
  <img src="https://github.com/smhhoseinee/computer-network-project/blob/main/res/logo.jpg" width="200" height="200" />
 
 ### phase0 : 
